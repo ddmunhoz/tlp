@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}The Last Pantry{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ asset('css/pages/home.css') }}">
+{% endblock %}
+
+{% block content %}
+<nav class="home" aria-label="Main">
+    <a class="home__btn" href="{{ url_for('new_item') }}">
+        <span class="home__label">Scan</span>
+        <span class="home__hint">Add an item by barcode</span>
+    </a>
+    <a class="home__btn" href="{{ url_for('pantry') }}">
+        <span class="home__label">Pantry</span>
+        <span class="home__hint">Everything on the shelves</span>
+    </a>
+    <a class="home__btn" href="{{ url_for('statistics') }}">
+        <span class="home__label">Statistics</span>
+        <span class="home__hint">How long will it last</span>
+    </a>
+    <a class="home__btn" href="{{ url_for('meals_page') }}">
+        <span class="home__label">Meals</span>
+        <span class="home__hint">Build a meal, meet the day</span>
+    </a>
+</nav>
+{% endblock %}

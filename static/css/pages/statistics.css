@@ -1,0 +1,292 @@
+/* Statistics — one question up top ("how many days of food?") then the numbers
+   that back it up. Big hero, calm supporting cards. */
+
+.stat-hero {
+    text-align: center;
+    padding: 2.5rem 1.25rem;
+    margin-bottom: 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+}
+.stat-hero__num {
+    display: block;
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: 4.5rem;
+    line-height: 1;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+}
+.stat-hero__unit {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: var(--muted);
+    margin-top: 0.6rem;
+}
+.stat-hero__sub { color: var(--ink-dim); margin: 1rem 0 0; }
+.stat-hero__sub strong { color: var(--ink); font-family: var(--font-mono); }
+/* the meals assumption note, sitting under the days-of-meals metric only */
+.hero-metric__note {
+    font-size: 0.68rem;
+    color: var(--muted);
+    white-space: nowrap;   /* keep it to one line, matching the other metrics' subs */
+}
+
+/* two metrics side by side: days of food | days of water */
+.stat-hero--split { display: flex; align-items: stretch; padding: 2rem 1rem; }
+.hero-metric {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 1rem;
+}
+.hero-metric + .hero-metric { border-left: 1px solid var(--line); }
+.hero-metric__num {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: 3.6rem;
+    line-height: 1;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+}
+.hero-metric--water .hero-metric__num { color: #5aa9e6; }   /* water reads blue */
+.hero-metric--meals .hero-metric__num { color: var(--amber); }   /* meals read amber */
+/* flags the days-of-meals unit red when the plan needs shopping (BOM pending) */
+.bom-flag { color: var(--rust); margin-left: 0.35em; }
+.hero-metric--link { text-decoration: none; color: inherit; border-radius: var(--radius); transition: box-shadow 0.15s; }
+.hero-metric--link:hover { box-shadow: inset 0 0 0 1px var(--brass); }
+.hero-metric--link:hover .hero-metric__unit { color: var(--brass); }
+.hero-metric__unit {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    margin-top: 0.55rem;
+}
+.hero-metric__sub { color: var(--ink-dim); margin: 0.8rem 0 0; font-size: 0.82rem; }
+.hero-metric__sub strong { color: var(--ink); font-family: var(--font-mono); }
+@media (max-width: 560px) {
+    .stat-hero--split { flex-direction: column; gap: 1.4rem; }
+    .hero-metric + .hero-metric { border-left: none; border-top: 1px solid var(--line); padding-top: 1.4rem; }
+}
+.stat-hero__lead {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.4rem;
+    color: var(--ink);
+    margin: 0 0 0.5rem;
+}
+.stat-hero--muted .btn { margin-top: 1rem; }
+
+/* supporting cards */
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: 1rem;
+    margin: 0 0 1.25rem;
+}
+.stat-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.1rem 1.25rem;
+}
+.stat-card dt {
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+}
+.stat-card dd {
+    margin: 0.35rem 0 0;
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: 1.8rem;
+    line-height: 1.1;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+}
+.stat-card dd .unit {
+    font-size: 0.8rem;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+}
+.stat-card__note {
+    margin: 0.5rem 0 0;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    color: var(--muted);
+    letter-spacing: 0.03em;
+}
+
+.stat-caveat {
+    color: var(--amber);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    line-height: 1.5;
+    margin: 0 0 1.25rem;
+}
+
+/* ---- nutrition charts (inline SVG/CSS, no libraries) ---- */
+.charts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: 1rem;
+    margin: 0 0 1.25rem;
+}
+.chart {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.1rem 1.25rem 1.25rem;
+}
+.chart__title {
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    margin: 0 0 1rem;
+}
+.chart__note {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin: 0 0 1.25rem;
+}
+
+/* macro donut */
+.donut-wrap { display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; }
+.donut { width: 132px; height: 132px; transform: rotate(-90deg); flex: none; }
+.donut__track { fill: none; stroke: var(--bg-2); stroke-width: 14; }
+.donut__seg { fill: none; stroke-width: 14; }
+.donut__seg--fat           { stroke: var(--amber); }
+.donut__seg--carbohydrates { stroke: #5aa9e6; }
+.donut__seg--proteins      { stroke: var(--accent); }
+
+.legend { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; min-width: 9rem; }
+.legend__row { display: flex; align-items: center; gap: 0.55rem; }
+.legend__dot { width: 0.7rem; height: 0.7rem; border-radius: 2px; flex: none; }
+.legend__dot--fat           { background: var(--amber); }
+.legend__dot--carbohydrates { background: #5aa9e6; }
+.legend__dot--proteins      { background: var(--accent); }
+.legend__label { color: var(--ink); font-size: 0.9rem; flex: 1; }
+.legend__val {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+}
+.legend__val small { color: var(--muted); }
+
+/* generic horizontal bars (per-shelf calories, NOVA, sugar/salt load) */
+.hbars { display: grid; gap: 0.55rem; }
+.hbar { display: flex; align-items: center; gap: 0.6rem; }
+.hbar__label {
+    width: 5.5rem;
+    flex: none;
+    color: var(--ink);
+    font-size: 0.82rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.hbar__label--wide { width: 7.5rem; font-family: var(--font-mono); font-size: 0.72rem; }
+.hbar__track {
+    flex: 1;
+    height: 0.75rem;
+    background: var(--bg-2);
+    border-radius: 999px;
+    overflow: hidden;
+}
+.hbar__fill { display: block; height: 100%; background: var(--accent); border-radius: 999px; min-width: 2px; }
+.hbar__val {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--muted);
+    min-width: 3.25rem;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+.hbar__val.is-over { color: var(--rust); }
+
+/* clickable charts — drill into the pantry, filtered */
+.legend__link {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    flex: 1;
+    text-decoration: none;
+    color: inherit;
+    padding: 0.2rem 0.3rem;
+    margin: -0.2rem -0.3rem;
+    border-radius: var(--radius);
+}
+.legend__link:hover { background: var(--bg-2); }
+.donut a { cursor: pointer; }
+.donut__seg { transition: opacity 0.12s ease; }
+.donut a:hover .donut__seg { opacity: 0.78; }
+.hbar--link { text-decoration: none; color: inherit; border-radius: var(--radius); }
+.hbar--link:hover .hbar__label { color: var(--brass); }
+.hbar--link:hover .hbar__track { box-shadow: inset 0 0 0 1px var(--brass); }
+.nsbar--link { text-decoration: none; color: inherit; border-radius: var(--radius); }
+.nsbar--link:hover .nsbar__track { box-shadow: inset 0 0 0 1px var(--brass); }
+.nsbar--link:hover .nsbar__n { color: var(--ink); }
+
+/* NOVA processing: greener = less processed, redder = ultra-processed */
+.hbar__fill--nova1 { background: var(--fresh); }
+.hbar__fill--nova2 { background: #7dc043; }
+.hbar__fill--nova3 { background: var(--amber); }
+.hbar__fill--nova4 { background: var(--rust); }
+
+/* sugar/salt load vs guideline */
+.hbar__fill--ok   { background: var(--accent); }
+.hbar__fill--over { background: var(--rust); }
+
+/* undated stock in the by-year chart */
+.hbar__fill--muted { background: var(--muted); opacity: 0.5; }
+
+/* days-of-nutrition tower: nutrients that run out before the food does */
+.hbar__fill--short { background: var(--amber); }
+
+.chart__sub {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    margin: 0.8rem 0 0;
+}
+
+/* nutri-score bars */
+.nsbars { display: grid; gap: 0.5rem; }
+.nsbar { display: flex; align-items: center; gap: 0.6rem; }
+.nsbar__grade {
+    width: 1.5rem;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    flex: none;
+}
+.nsbar__track {
+    flex: 1;
+    height: 0.75rem;
+    background: var(--bg-2);
+    border-radius: 999px;
+    overflow: hidden;
+}
+.nsbar__fill { display: block; height: 100%; border-radius: 999px; min-width: 2px; }
+.nsbar__n {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--muted);
+    width: 1.5rem;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}

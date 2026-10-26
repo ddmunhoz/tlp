@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit meal' if meal else 'Build a meal' }} — The Last Pantry{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ asset('css/pages/meals.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="page-head page-head--back">
+    <a class="page-back" href="{{ url_for('meals_page') }}">← Menu</a>
+    <h1>{{ 'Edit meal' if meal else 'Build a meal' }}</h1>
+</section>
+
+{# per-person daily targets + the addable pantry items, for the live builder JS #}
+<div class="meal-builder"
+     data-cal-man="{{ targets.man }}" data-cal-woman="{{ targets.woman }}" data-cal-child="{{ targets.child }}"
+     {% for n in nutrient_meta %}data-nt-{{ n.key }}="{{ nutrient_targets[n.key] }}" {% endfor %}
+     {% if meal %}data-meal-id="{{ meal.id }}"{% endif %}>
+
+    <form class="meal-form" method="post"
+          action="{{ url_for('update_meal', meal_id=meal.id) if meal else url_for('save_meal') }}">
+        <input type="hidden" name="components" class="js-components" value="">
+
+        <label class="field">
+            <span class="field__label">Meal name</span>
+            <input type="text" name="name" class="js-meal-name" required
+                   placeholder="e.g. Chili night" value="{{ meal.name if meal else '' }}">
+        </label>
+
+        <div class="meal-picker">
+            <input type="search" class="js-pick-search meal-picker__search"
+                   placeholder="Add an item… search your pantry" aria-label="Search pantry items">
+            <ul class="meal-picker__list js-pick-list">
+                {% for c in tag_choices %}
+                {# a tag line pools every product carrying it; its figures are the live
+                   average of the tag's in-stock members #}
+                <li class="pick-item pick-item--tag js-pick"
+                    data-source="tag" data-tag-id="{{ c.tag_id }}"
+                    data-name="{{ c.name }}" data-barcode=""
+                    data-kcalperg="{{ c.kcal_per_g }}" data-unit="g"
+                    {% for n in nutrient_meta %}data-{{ n.col | replace('_', '-') }}="{{ c[n.col] if c[n.col] is not none else '' }}" {% endfor %}
+                    data-photo="">
+                    <span class="pick-item__thumb pick-item__thumb--tag" aria-hidden="true">🏷</span>
+                    <span class="pick-item__name">{{ c.name }}</span>
+                    <span class="pick-item__meta">
+                        {%- if c.in_stock -%}
+                        {{ (c.kcal_per_g * 100) | round | int }} kcal/100g · {{ c.in_stock }} in stock
+                        {%- else -%}
+                        no stock tagged
+                        {%- endif -%}
+                    </span>
+                </li>
+                {% endfor %}
+                {% for c in choices %}
+                <li class="pick-item js-pick"
+                    data-source="product"
+                    data-name="{{ c.name }}" data-barcode="{{ c.barcode }}"
+                    data-kcalperg="{{ c.kcal_per_g }}" data-unit="{{ c.unit }}"
+                    {% for n in nutrient_meta %}data-{{ n.col | replace('_', '-') }}="{{ c[n.col] if c[n.col] is not none else '' }}" {% endfor %}
+                    data-photo="{{ url_for('media', filename=c.photo_path) if c.photo_path else '' }}">
+                    {% if c.photo_path %}
+                    <img class="pick-item__thumb" src="{{ url_for('media', filename=c.photo_path) }}" alt="">
+                    {% else %}
+                    <span class="pick-item__thumb pick-item__thumb--none" aria-hidden="true"></span>
+                    {% endif %}
+                    <span class="pick-item__name">{{ c.name }}</span>
+                    <span class="pick-item__meta">{{ (c.kcal_per_g * 100) | round | int }} kcal/100{{ c.unit }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% if not choices and not tag_choices %}
+            <p class="muted">No items with calorie data yet — add calories to your pantry items first.</p>
+            {% endif %}
+        </div>
+
+        <ul class="meal-lines js-meal-lines"></ul>
+        <p class="meal-empty js-meal-empty">Pick items above to build your meal.</p>
+
+        <div class="meal-total">
+            <span class="meal-total__label">Meal total</span>
+            <span class="meal-total__num"><span class="js-total">0</span> kcal</span>
+        </div>
+
+        <div class="gauges">
+            {% for who in ['man', 'woman', 'child'] %}
+            <div class="gauge js-gauge" data-who="{{ who }}">
+                <div class="gauge__head">
+                    <span class="gauge__who">{{ who|capitalize }}</span>
+                    <span class="gauge__pct js-gauge-pct">0%</span>
+                </div>
+                <div class="gauge__track"><div class="gauge__fill js-gauge-fill"></div></div>
+                <div class="gauge__sub"><span class="js-gauge-sub">0</span> / {{ targets[who] }} kcal</div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if nutrient_meta %}
+        <div class="nbars">
+            <p class="nbars__cap">Nutrients — share of an adult's day</p>
+            {% for n in nutrient_meta %}
+            <div class="nbar js-nbar" data-key="{{ n.key }}" data-col="{{ n.col }}"
+                 data-unit="{{ n.unit }}" data-target="{{ nutrient_targets[n.key] }}">
+                <span class="nbar__label">{{ n.label }}</span>
+                <span class="nbar__track"><span class="nbar__fill js-nbar-fill"></span></span>
+                <span class="nbar__val"><span class="js-nbar-pct">0%</span>
+                    <small class="js-nbar-sub"></small></span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="meal-actions">
+            <button class="btn btn--primary" type="submit">{{ 'Save changes' if meal else 'Save to menu' }}</button>
+            <a class="btn" href="{{ url_for('meals_page') }}">Cancel</a>
+        </div>
+    </form>
+
+    {# prefill data for edit mode #}
+    {% if meal %}
+    <script type="application/json" class="js-meal-data">
+        {{ meal['items'] | tojson }}
+    </script>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ asset('js/pages/meals.js') }}"></script>
+{% endblock %}

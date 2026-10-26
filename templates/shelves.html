@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Shelves — The Last Pantry{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ asset('css/pages/shelves.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="page-head">
+    <h1>Shelves</h1>
+</section>
+
+<form class="shelf-new" method="post" action="{{ url_for('create_shelf') }}">
+    <input type="text" name="name" placeholder="New shelf name" aria-label="New shelf name" required>
+    <button class="btn btn--primary" type="submit">Add shelf</button>
+</form>
+
+{% if not shelves %}
+    <p class="empty">No shelves yet. Add one above, then assign items to it.</p>
+{% else %}
+    <ul class="shelf-manage">
+        {% for shelf in shelves %}
+        <li class="shelf-manage__row">
+            <form class="shelf-rename" method="post" action="{{ url_for('rename_shelf', shelf_id=shelf.id) }}">
+                <input type="text" name="name" value="{{ shelf.name }}" aria-label="Shelf name" required>
+                <button class="btn btn--small" type="submit">Rename</button>
+            </form>
+            <form method="post" action="{{ url_for('delete_shelf', shelf_id=shelf.id) }}"
+                  class="js-confirm" data-confirm="Delete {{ shelf.name }}? Its items become unshelved.">
+                <button class="btn btn--small btn--danger" type="submit">Delete</button>
+            </form>
+        </li>
+        {% endfor %}
+    </ul>
+{% endif %}
+{% endblock %}

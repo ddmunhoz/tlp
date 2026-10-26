@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Not found — The Last Pantry{% endblock %}
+
+{% block content %}
+<section class="page-head">
+    <h1>Not found</h1>
+</section>
+<p class="empty">That item isn't here. It may have been removed.</p>
+<a class="btn btn--primary" href="{{ url_for('pantry') }}">Back to pantry</a>
+{% endblock %}

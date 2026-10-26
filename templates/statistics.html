@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+{% block title %}Statistics — The Last Pantry{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ asset('css/pages/statistics.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="page-head">
+    <h1>Statistics</h1>
+</section>
+
+{% if forecast.daily_need == 0 %}
+    <div class="stat-hero stat-hero--muted">
+        <p class="stat-hero__lead">Set up your household first.</p>
+        <p class="muted">Tell the pantry who's eating and the daily calories to budget
+            per head, and this page will estimate how long your stores last.</p>
+        <a class="btn btn--primary" href="{{ url_for('settings_page') }}">Open settings</a>
+    </div>
+{% else %}
+    <div class="stat-hero stat-hero--split">
+        <div class="hero-metric">
+            {% if forecast.days is not none and forecast.counted %}
+            <span class="hero-metric__num">{{ forecast.days | round | int }}</span>
+            <span class="hero-metric__unit">days of food</span>
+            <p class="hero-metric__sub">Runs out ~ <strong>{{ forecast.runs_out }}</strong></p>
+            {% else %}
+            <span class="hero-metric__num">0</span>
+            <span class="hero-metric__unit">days of food</span>
+            <p class="hero-metric__sub">Add calories to your items.</p>
+            {% endif %}
+        </div>
+        <a class="hero-metric hero-metric--meals hero-metric--link" href="{{ url_for('meals_page') }}"
+           title="See your meal plan">
+            {# round half-up (int(x + 0.5)) to match the meals page's JS Math.round —
+               Jinja's |round is banker's rounding, which disagreed on .5 values #}
+            <span class="hero-metric__num">{{ ((meals_days or 0) + 0.5) | int }}</span>
+            <span class="hero-metric__unit">days of meals{% if bom_pending %}<span class="bom-flag"
+                title="Your plan needs more than you have in stock — see the BOM on the meals page">*&nbsp;(bom)</span>{% endif %}</span>
+            {# the raw count sits right under the days so the division is visible #}
+            <p class="hero-metric__sub hero-metric__note"><strong>{{ meals_total | int }} meals</strong>
+                {% set heads = people.men + people.women + people.children %}
+                · {{ meals_per_day }} a day for {{ heads }} {{ 'person' if heads == 1 else 'people' }}</p>
+        </a>
+        {% if water.days is not none and water.counted %}
+        <a class="hero-metric hero-metric--water hero-metric--link" href="{{ url_for('pantry', fluid=1) }}"
+           title="Show your drinking-fluid items in the pantry">
+            <span class="hero-metric__num">{{ water.days | round | int }}</span>
+            <span class="hero-metric__unit">days of water</span>
+            <p class="hero-metric__sub">{{ water.total_l | round(1) }} L · runs out ~ <strong>{{ water.runs_out }}</strong></p>
+        </a>
+        {% else %}
+        <div class="hero-metric hero-metric--water">
+            <span class="hero-metric__num">0</span>
+            <span class="hero-metric__unit">days of water</span>
+            <p class="hero-metric__sub">Tick "counts as drinking fluid" on your drinks.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <dl class="stat-grid">
+        <div class="stat-card">
+            <dt>Household</dt>
+            <dd>{{ forecast.people_total }} {{ 'person' if forecast.people_total == 1 else 'people' }}</dd>
+            <p class="stat-card__note">
+                {{ people.men }} men · {{ people.women }} women · {{ people.children }} children
+            </p>
+        </div>
+        <div class="stat-card">
+            <dt>Daily need</dt>
+            <dd>{{ forecast.daily_need | grouped }} <span class="unit">kcal/day</span></dd>
+            <p class="stat-card__note">
+                {{ per_person.man }} / {{ per_person.woman }} / {{ per_person.child }} kcal per man / woman / child
+            </p>
+        </div>
+        <div class="stat-card">
+            <dt>On the shelves</dt>
+            <dd>{{ forecast.total_kcal | grouped }} <span class="unit">kcal</span></dd>
+            <p class="stat-card__note">
+                across {{ forecast.counted }} counted item{{ '' if forecast.counted == 1 else 's' }}
+            </p>
+        </div>
+    </dl>
+
+    {% if forecast.missing or forecast.expired %}
+    <p class="stat-caveat">
+        {% if forecast.missing %}
+        {{ forecast.missing }} item{{ '' if forecast.missing == 1 else 's' }} skipped — no calorie data on them yet.
+        {% endif %}
+        {% if forecast.expired %}
+        {{ forecast.expired }} expired item{{ '' if forecast.expired == 1 else 's' }} left out of the count.
+        {% endif %}
+    </p>
+    {% endif %}
+
+    {% if breakdown.counted or by_shelf.rows %}
+    <section class="charts">
+        {% if breakdown.counted %}
+        <div class="chart">
+            <h2 class="chart__title">Where the calories come from</h2>
+            <div class="donut-wrap">
+                {% set C = 339.292 %}{# circumference of an r=54 circle #}
+                <svg class="donut" viewBox="0 0 120 120" role="img"
+                     aria-label="Calories by macronutrient">
+                    <circle class="donut__track" cx="60" cy="60" r="54"></circle>
+                    {% set ns = namespace(off=0) %}
+                    {% for seg in breakdown.macro_segments if seg.pct > 0 %}
+                    {% set dash = seg.pct / 100 * C %}
+                    <a href="{{ url_for('pantry', macro=seg.key) }}">
+                        <circle class="donut__seg donut__seg--{{ seg.key }}" cx="60" cy="60" r="54"
+                                stroke-dasharray="{{ dash }} {{ C }}"
+                                stroke-dashoffset="{{ -ns.off }}"></circle>
+                    </a>
+                    {% set ns.off = ns.off + dash %}
+                    {% endfor %}
+                </svg>
+                <ul class="legend">
+                    {% for seg in breakdown.macro_segments %}
+                    <li class="legend__row">
+                        <a class="legend__link" href="{{ url_for('pantry', macro=seg.key) }}"
+                           title="Show pantry items containing {{ seg.label | lower }}">
+                            <span class="legend__dot legend__dot--{{ seg.key }}"></span>
+                            <span class="legend__label">{{ seg.label }}</span>
+                            <span class="legend__val">{{ seg.pct | round | int }}%
+                                <small>· {{ seg.grams | round | int }} g</small></span>
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if supply.rows %}
+        <div class="chart">
+            <h2 class="chart__title">Days of nutrition</h2>
+            <div class="hbars">
+                {% for row in supply.rows %}
+                <a class="hbar hbar--link" href="{{ url_for('pantry', macro=row.key) }}"
+                   title="Show pantry items containing {{ row.label | lower }}">
+                    <span class="hbar__label hbar__label--wide">{{ row.label }}</span>
+                    <span class="hbar__track">
+                        <span class="hbar__fill {{ 'hbar__fill--short' if row.short }}"
+                              style="width: {{ (row.days / supply.max * 100) if supply.max else 0 }}%"></span>
+                    </span>
+                    <span class="hbar__val {{ 'is-over' if row.short }}">{{ row.days | round | int }}d</span>
+                </a>
+                {% endfor %}
+            </div>
+            <p class="chart__sub">days your stock covers the household · amber = runs out before your food does</p>
+        </div>
+        {% endif %}
+
+        {% if by_shelf.rows %}
+        <div class="chart">
+            <h2 class="chart__title">Calories per shelf</h2>
+            <div class="hbars">
+                {% for row in by_shelf.rows %}
+                <div class="hbar">
+                    <span class="hbar__label" title="{{ row.shelf }}">{{ row.shelf }}</span>
+                    <span class="hbar__track">
+                        <span class="hbar__fill" style="width: {{ (row.kcal / by_shelf.max * 100) if by_shelf.max else 0 }}%"></span>
+                    </span>
+                    <span class="hbar__val">{{ row.kcal | grouped }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if by_year.rows %}
+        <div class="chart">
+            <h2 class="chart__title">Food by expiry year</h2>
+            <div class="hbars">
+                {% for row in by_year.rows %}
+                {% if row.year is not none %}
+                <a class="hbar hbar--link" href="{{ url_for('pantry', year=row.year) }}"
+                   title="Show items expiring in {{ row.year }} in the pantry">
+                    <span class="hbar__label">{{ row.year }}</span>
+                    <span class="hbar__track">
+                        <span class="hbar__fill" style="width: {{ (row.units / by_year.max * 100) if by_year.max else 0 }}%"></span>
+                    </span>
+                    <span class="hbar__val">{{ row.units }}</span>
+                </a>
+                {% else %}
+                <div class="hbar">
+                    <span class="hbar__label">No date</span>
+                    <span class="hbar__track">
+                        <span class="hbar__fill hbar__fill--muted" style="width: {{ (row.units / by_year.max * 100) if by_year.max else 0 }}%"></span>
+                    </span>
+                    <span class="hbar__val">{{ row.units }}</span>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            <p class="chart__sub">units on the shelves, by the year they expire</p>
+        </div>
+        {% endif %}
+
+        {% if breakdown.graded %}
+        <div class="chart">
+            <h2 class="chart__title">Nutri-Score spread</h2>
+            <div class="nsbars">
+                {% for g in ['a', 'b', 'c', 'd', 'e'] %}
+                <a class="nsbar nsbar--link" href="{{ url_for('pantry', grade=g) }}"
+                   title="Show Nutri-Score {{ g | upper }} items in the pantry">
+                    <span class="nutriscore nutriscore--{{ g }} nsbar__grade">{{ g | upper }}</span>
+                    <span class="nsbar__track">
+                        <span class="nsbar__fill nutriscore--{{ g }}"
+                              style="width: {{ (breakdown.grades[g] / breakdown.grade_max * 100) if breakdown.grade_max else 0 }}%"></span>
+                    </span>
+                    <span class="nsbar__n">{{ breakdown.grades[g] }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if breakdown.nova_total %}
+        <div class="chart">
+            <h2 class="chart__title">Processing (NOVA)</h2>
+            {% set nova_labels = {1: 'Unprocessed', 2: 'Culinary', 3: 'Processed', 4: 'Ultra-processed'} %}
+            <div class="hbars">
+                {% for grp in [1, 2, 3, 4] %}
+                <a class="hbar hbar--link" href="{{ url_for('pantry', nova=grp) }}"
+                   title="Show {{ nova_labels[grp] | lower }} items in the pantry">
+                    <span class="hbar__label hbar__label--wide">{{ nova_labels[grp] }}</span>
+                    <span class="hbar__track">
+                        <span class="hbar__fill hbar__fill--nova{{ grp }}"
+                              style="width: {{ (breakdown.nova[grp] / breakdown.nova_max * 100) if breakdown.nova_max else 0 }}%"></span>
+                    </span>
+                    <span class="hbar__val">{{ breakdown.nova[grp] }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if load %}
+        <div class="chart">
+            <h2 class="chart__title">Daily sugar &amp; salt</h2>
+            <div class="hbars">
+                {% for row in load %}
+                <div class="hbar">
+                    <span class="hbar__label">{{ row.label }}</span>
+                    <span class="hbar__track">
+                        <span class="hbar__fill {{ 'hbar__fill--over' if row.over else 'hbar__fill--ok' }}"
+                              style="width: {{ [row.pct, 100] | min }}%"></span>
+                    </span>
+                    <span class="hbar__val {{ 'is-over' if row.over }}">{{ row.per_day | round(1) }} / {{ row.limit | round | int }} g</span>
+                </div>
+                {% endfor %}
+            </div>
+            <p class="chart__sub">household per day · guideline ~50 g sugar / 5 g salt per person</p>
+        </div>
+        {% endif %}
+    </section>
+
+    {% if breakdown.grams.sugars or breakdown.grams.salt or breakdown.grams.fiber %}
+    <p class="chart__note">
+        Edible stock also holds
+        {{ breakdown.grams.sugars | round | int }} g sugars ·
+        {{ breakdown.grams.fiber | round | int }} g fibre ·
+        {{ breakdown.grams.salt | round(1) }} g salt.
+    </p>
+    {% endif %}
+    {% endif %}
+
+    <a class="btn" href="{{ url_for('settings_page') }}">Adjust household</a>
+{% endif %}
+{% endblock %}

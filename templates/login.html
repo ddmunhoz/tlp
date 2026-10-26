@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sign in — The Last Pantry</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/pages/login.css') }}">
+</head>
+<body class="login-body">
+    <main class="login">
+        <h1 class="login__brand">The Last Pantry</h1>
+        <form class="login__form" method="post" action="{{ url_for('login') }}">
+            {% if error %}<p class="flash flash--error">{{ error }}</p>{% endif %}
+            <input type="hidden" name="next" value="{{ next or '' }}">
+            <label class="field">
+                <span class="field__label">Password</span>
+                <input type="password" name="password" autocomplete="current-password"
+                       autofocus required>
+            </label>
+            <button class="btn btn--primary" type="submit">Sign in</button>
+        </form>
+    </main>
+</body>
+</html>

@@ -1,0 +1,449 @@
+/* Meals — a builder up top (pick items, set grams, watch the day-gauges) and your
+   saved menu below. */
+
+/* the saved-meal count beside the "Your menu" heading */
+.menu-count {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+    vertical-align: middle;
+    margin-left: 0.35rem;
+}
+
+.meal-builder {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.4rem;
+    margin-bottom: 1.75rem;
+}
+.meal-form > .field { margin-bottom: 1rem; }
+
+/* --- item picker --- */
+.meal-picker { margin: 0.5rem 0 1rem; }
+.meal-picker__search {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.6rem 0.8rem;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+}
+.meal-picker__search:focus { outline: none; border-color: var(--brass); }
+.meal-picker__list {
+    list-style: none;
+    margin: 0.5rem 0 0;
+    padding: 0;
+    max-height: 12rem;
+    overflow-y: auto;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+}
+.pick-item {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.5rem 0.8rem;
+    cursor: pointer;
+    border-bottom: 1px solid var(--line);
+}
+.pick-item:last-child { border-bottom: none; }
+.pick-item:hover { background: var(--bg-2); }
+.pick-item__thumb {
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    object-fit: contain;
+    border-radius: var(--radius);
+}
+.pick-item__thumb--none { background: var(--bg-2); border: 1px solid var(--line); }
+.pick-item__name { color: var(--ink); flex: 1; min-width: 0; }
+.pick-item__meta {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+/* --- meal lines --- */
+.meal-lines { list-style: none; margin: 0; padding: 0; }
+.meal-empty { color: var(--muted); font-size: 0.9rem; margin: 0.5rem 0; }
+.meal-line {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto auto;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--line);
+}
+.meal-line__thumb {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    border-radius: var(--radius);
+    flex: 0 0 auto;
+}
+.meal-line__thumb--none { background: var(--bg-2); border: 1px solid var(--line); display: inline-block; }
+.meal-line__name { color: var(--ink); min-width: 0; }
+.meal-line__qty { display: inline-flex; align-items: center; gap: 0.35rem; }
+.meal-line__qty input {
+    width: 4.5rem;
+    padding: 0.4rem 0.5rem;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    color: var(--ink);
+    font-family: var(--font-mono);
+    text-align: right;
+    color-scheme: dark;
+}
+.meal-line__unit { font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); }
+.meal-line__kcal {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--ink);
+    min-width: 5rem;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+.meal-line__rm {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 1.3rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 0.3rem;
+}
+.meal-line__rm:hover { color: var(--rust); }
+
+/* --- total + gauges --- */
+.meal-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin: 1.1rem 0 1.25rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--line);
+}
+.meal-total__label {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+}
+.meal-total__num {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: 1.6rem;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.gauges { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.25rem; }
+@media (max-width: 520px) { .gauges { grid-template-columns: 1fr; } }
+.gauge {
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 0.8rem 0.9rem;
+}
+.gauge__head { display: flex; justify-content: space-between; align-items: baseline; }
+.gauge__who {
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+}
+.gauge__pct {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: 1.1rem;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+}
+.gauge__track {
+    height: 0.5rem;
+    background: var(--surface);
+    border-radius: 999px;
+    overflow: hidden;
+    margin: 0.5rem 0 0.4rem;
+}
+.gauge__fill { height: 100%; width: 0; border-radius: 999px; background: var(--accent); transition: width .15s ease; }
+.gauge__sub { font-family: var(--font-mono); font-size: 0.62rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+/* state colours: low = muted, on-target = mint, over = rust */
+.gauge.is-low  .gauge__fill { background: var(--muted); }
+.gauge.is-ok   .gauge__fill { background: var(--accent); }
+.gauge.is-over .gauge__fill { background: var(--rust); }
+.gauge.is-over .gauge__pct  { color: var(--rust); }
+
+/* --- builder nutrient bars: share of an adult's daily target --- */
+.nbars { display: grid; gap: 0.5rem; margin-bottom: 1.25rem; }
+.nbars__cap {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin: 0 0 0.15rem;
+}
+.nbar { display: flex; align-items: center; gap: 0.6rem; }
+.nbar__label { width: 5.5rem; font-size: 0.8rem; color: var(--ink-dim); }
+.nbar__track { flex: 1; height: 0.5rem; background: var(--bg-2); border-radius: 999px; overflow: hidden; }
+.nbar__fill { display: block; height: 100%; width: 0; border-radius: 999px; background: var(--accent); transition: width .15s ease; }
+.nbar__val {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    min-width: 5.5rem;
+    text-align: right;
+}
+.nbar__val small { color: var(--muted); opacity: 0.75; }
+.nbar.is-met .nbar__fill { background: var(--fresh, var(--accent)); }
+.nbar.is-met .nbar__val { color: var(--ink-dim); }
+
+.meal-actions { display: flex; gap: 0.75rem; }
+
+/* --- saved menu --- */
+.menu__title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.3rem;
+    color: var(--ink);
+    margin: 0 0 0.9rem;
+}
+.menu__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; }
+.menu-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;   /* pin the servings control to the top, by the name */
+    gap: 1rem;
+    flex-wrap: wrap;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 0.9rem 1.1rem;
+}
+/* main takes the remaining width (its gauges/bars wrap inside it) so the side
+   column stays beside it on the right instead of getting pushed to a new line */
+.menu-card__main { flex: 1 1 auto; min-width: 0; }
+.menu-card__name { font-weight: 600; color: var(--ink); display: block; }
+.menu-card__meta { font-family: var(--font-mono); font-size: 0.68rem; color: var(--muted); }
+.menu-card__gauges { display: flex; gap: 0.75rem; margin-top: 0.5rem; flex-wrap: wrap; }
+.mini-gauge { display: inline-flex; align-items: center; gap: 0.35rem; }
+.mini-gauge__lbl { font-family: var(--font-mono); font-size: 0.6rem; color: var(--muted); width: 0.8rem; }
+.mini-gauge__track { width: 3.5rem; height: 0.4rem; background: var(--bg-2); border-radius: 999px; overflow: hidden; }
+.mini-gauge__fill { display: block; height: 100%; background: var(--accent); }
+.mini-gauge__pct { font-family: var(--font-mono); font-size: 0.62rem; color: var(--ink-dim); min-width: 2.4rem; }
+/* compact nutrient bars on a saved card */
+.menu-card__nutrients { display: flex; gap: 0.6rem 0.9rem; margin-top: 0.45rem; flex-wrap: wrap; }
+.mini-nbar { display: inline-flex; align-items: center; gap: 0.35rem; }
+.mini-nbar__lbl { font-family: var(--font-mono); font-size: 0.58rem; color: var(--muted); }
+.mini-nbar__track { width: 2.6rem; height: 0.35rem; background: var(--bg-2); border-radius: 999px; overflow: hidden; }
+.mini-nbar__fill { display: block; height: 100%; background: var(--accent); opacity: 0.85; }
+.mini-nbar__pct { font-family: var(--font-mono); font-size: 0.58rem; color: var(--ink-dim); min-width: 2.1rem; }
+.menu-warn { font-size: 0.85em; margin-left: 0.15rem; cursor: help; vertical-align: middle; }
+.menu-card__side { flex: 0 0 auto; margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 0.7rem; }
+
+/* menu page head: title + Build button on one row */
+.page-head--row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.page-head--back { display: flex; flex-direction: column; gap: 0.25rem; }
+.page-back {
+    font-family: var(--font-mono); font-size: 0.7rem; color: var(--muted);
+    text-decoration: none; width: max-content;
+}
+.page-back:hover { color: var(--brass); }
+
+/* empty menu */
+.menu-empty {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 2rem 1.5rem; text-align: center;
+}
+.menu-empty__lead { font-weight: 600; color: var(--ink); margin: 0 0 0.4rem; }
+.menu-empty .btn { margin-top: 1rem; }
+.menu-card__actions { display: flex; gap: 0.5rem; align-items: center; }
+.menu-card__actions form { margin: 0; }
+
+/* --- shared pantry planner --- */
+.plan-usage {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 0.8rem 1rem;
+    margin-bottom: 0.9rem;
+    box-sizing: border-box;
+    overflow: hidden;   /* nothing spills past the panel edge */
+}
+.plan-usage__head { display: flex; justify-content: space-between; align-items: baseline; gap: 0.75rem; margin-bottom: 0.55rem; }
+.plan-usage__title {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+}
+.plan-verdict { font-family: var(--font-mono); font-size: 0.7rem; color: var(--muted); }
+.plan-verdict.is-ok { color: var(--fresh, var(--accent)); }
+.plan-verdict.is-over { color: var(--rust); }
+
+/* BOM — the shopping list that appears when the plan outstrips stock */
+.plan-bom {
+    background: var(--surface);
+    border: 1px solid color-mix(in srgb, var(--rust) 45%, var(--line));
+    border-radius: var(--radius);
+    padding: 0.8rem 1rem;
+    margin-bottom: 0.9rem;
+    box-sizing: border-box;
+}
+.plan-bom__head { display: flex; align-items: baseline; gap: 0.6rem; margin-bottom: 0.55rem; }
+.plan-bom__title {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    color: var(--rust);
+}
+.plan-bom__sub { font-family: var(--font-mono); font-size: 0.6rem; color: var(--muted); }
+.plan-bom__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.3rem; }
+.plan-bom__item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 0.3rem 0;
+    border-bottom: 1px solid var(--line);
+}
+.plan-bom__item:last-child { border-bottom: none; }
+.plan-bom__name { font-size: 0.82rem; color: var(--ink-dim); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.plan-bom__amt {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #f0897a;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+.plan-usage__bars { display: grid; gap: 0.4rem; }
+/* fixed 3-column grid so every track shares one left+right edge, regardless of how
+   long each label or value string is (a flex layout let the tracks drift row-to-row) */
+.plan-bar { display: grid; grid-template-columns: minmax(0, 1fr) 34% 7rem; align-items: center; gap: 0.6rem; }
+.plan-bar__lbl { min-width: 0; font-size: 0.78rem; color: var(--ink-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.plan-bar__track { height: 0.45rem; background: var(--bg-2); border-radius: 999px; overflow: hidden; }
+.plan-bar__fill { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 999px; transition: width .15s ease; }
+.plan-bar.is-over .plan-bar__fill { background: var(--rust); }
+.plan-bar__val { font-family: var(--font-mono); font-size: 0.6rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
+.plan-bar.is-over .plan-bar__val { color: var(--rust); }
+
+/* narrow screens: name + value share the top line, track drops full-width below */
+@media (max-width: 560px) {
+    .plan-bar { grid-template-columns: minmax(0, 1fr) auto; gap: 0.15rem 0.5rem; }
+    .plan-bar__track { grid-column: 1 / -1; order: 3; height: 0.4rem; }
+}
+
+/* the servings control on each card — cap · stepper · headroom, all one line */
+.plan-step { display: inline-flex; align-items: center; gap: 0.5rem; }
+.plan-step__cap {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted);
+}
+.plan-step__room {
+    font-family: var(--font-mono); font-size: 0.8rem; font-weight: 600;
+    color: var(--fresh, var(--accent)); font-variant-numeric: tabular-nums;
+    min-width: 1.8rem;
+}
+.plan-step.is-full .plan-step__room { color: var(--amber); }
+
+/* "feeds home ~2 days" — the people-aware translation under the stepper */
+.plan-step__feeds {
+    font-family: var(--font-mono); font-size: 0.68rem;
+    color: var(--ink-dim); font-variant-numeric: tabular-nums; text-align: right;
+}
+.plan-step__feeds:empty { display: none; }
+.plan-step__feeds.is-muted { color: var(--muted); }
+
+/* who the plan feeds — one-line basis note above the planner */
+.plan-basis {
+    font-family: var(--font-mono); font-size: 0.7rem;
+    margin: 0 0 0.9rem; letter-spacing: 0.01em;
+}
+
+/* segmented − n + stepper (native spinners suppressed so there's one control) */
+.stepper {
+    display: inline-flex; align-items: stretch;
+    border: 1px solid var(--line); border-radius: 999px;
+    background: var(--bg-2); overflow: hidden;
+}
+.stepper__btn {
+    border: 0; background: transparent; color: var(--ink-dim);
+    width: 1.9rem; font-size: 1.05rem; line-height: 1; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: background .12s ease, color .12s ease;
+}
+.stepper__btn:hover { background: var(--surface); color: var(--brass); }
+.stepper__btn:active { background: var(--line); }
+.stepper__n {
+    width: 2.3rem; text-align: center;
+    border: 0; border-left: 1px solid var(--line); border-right: 1px solid var(--line);
+    background: transparent; color: var(--ink);
+    font-family: var(--font-mono); font-size: 0.85rem; padding: 0.35rem 0;
+    -moz-appearance: textfield; appearance: textfield;
+}
+.stepper__n::-webkit-inner-spin-button,
+.stepper__n::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.stepper__n:focus { outline: none; background: var(--surface); }
+
+/* hover popover: the meal's ingredients. position:fixed + JS-placed so it never
+   clips at the page edge. */
+.menu-pop {
+    position: fixed;
+    left: -9999px;
+    top: 0;
+    z-index: 60;
+    width: 17rem;
+    padding: 0.8rem 0.9rem;
+    background: var(--surface-hi);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+}
+.menu-pop[hidden] { display: none; }
+.menu-pop__title { font-weight: 600; color: var(--ink); display: block; margin-bottom: 0.5rem; }
+.menu-pop__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.3rem; }
+.menu-pop__list li { display: flex; justify-content: space-between; gap: 1rem; }
+.menu-pop__ing { color: var(--ink-dim); }
+.menu-pop__amt {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+/* --- tag-sourced picks + lines (a tag pools every product carrying it) ----- */
+.pick-item__thumb--tag,
+.meal-line__thumb--tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line));
+    font-size: 0.85rem;
+}
+.pick-item--tag .pick-item__name::after {
+    content: "tag";
+    margin-left: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    vertical-align: middle;
+}

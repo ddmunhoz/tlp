@@ -1,0 +1,164 @@
+/* Quick-adjust — you scanned something you already own. One job: change how many
+   you've got, fast, with a big thumb-sized +/-. Everything else stays out of the way. */
+
+.adjust {
+    max-width: 30rem;
+    margin: 1.5rem auto;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+}
+.adjust--fresh   { border-left-color: var(--fresh); }
+.adjust--soon    { border-left-color: var(--amber); }
+.adjust--expired { border-left-color: var(--rust); }
+
+.adjust__head {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding-bottom: 1.1rem;
+    border-bottom: 1px solid var(--line);
+}
+.adjust__thumb {
+    flex: 0 0 auto;
+    width: 52px;
+    height: 52px;
+    object-fit: contain;
+    border-radius: var(--radius);
+}
+.adjust__id { min-width: 0; flex: 1; }
+.adjust__name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.25rem;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin: 0;
+    line-height: 1.15;
+}
+.adjust__meta {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin: 0.35rem 0 0;
+}
+
+/* the counter row — the hero of this screen */
+.counter {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 1.75rem 0 0.5rem;
+}
+.counter__num {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: 3rem;
+    line-height: 3.75rem;         /* line up with the 3.75rem tall buttons */
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    min-width: 3rem;
+    text-align: center;
+}
+.counter__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.75rem;
+    height: 3.75rem;
+    font-size: 2rem;
+    line-height: 1;
+    color: var(--ink);
+    background: var(--surface-hi);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    cursor: pointer;
+    list-style: none;             /* kill the <summary> disclosure marker */
+    user-select: none;
+    transition: border-color 0.12s ease, background 0.12s ease;
+}
+.counter__btn::-webkit-details-marker { display: none; }
+.counter__btn:hover { border-color: var(--brass); background: var(--bg-2); }
+.counter form { margin: 0; }
+.counter__add { position: relative; }
+.counter__add[open] > .counter__btn { border-color: var(--brass); color: var(--accent); }
+
+/* the "+" menu: same-expiry bump vs a whole new batch */
+.addmenu {
+    margin-top: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    /* pin it under the + so it doesn't shove the counter around on open */
+    position: absolute;
+    right: 0;
+    top: 100%;
+    width: 17rem;
+    z-index: 10;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+}
+.addmenu form { margin: 0; display: flex; flex-direction: column; gap: 0.6rem; }
+.addmenu__one { width: 100%; }
+.addmenu__new {
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--line);
+}
+.addmenu__title {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+}
+
+.adjust__nav {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line);
+}
+
+/* ---- the "pick an entry" list when a barcode is on more than one shelf entry ---- */
+.pick__hint {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin: 0 0 1rem;
+}
+.pick { list-style: none; margin: 0 0 1.25rem; padding: 0; }
+.pick__row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.85rem 1rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--line);
+    border-radius: var(--radius);
+}
+.pick__row + .pick__row { margin-top: 0.6rem; }
+.pick__row--fresh   { border-left-color: var(--fresh); }
+.pick__row--soon    { border-left-color: var(--amber); }
+.pick__row--expired { border-left-color: var(--rust); }
+.pick__link { flex: 1; min-width: 0; text-decoration: none; display: block; }
+.pick__name { display: block; font-weight: 600; color: var(--ink); }
+.pick__meta {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-top: 0.2rem;
+}

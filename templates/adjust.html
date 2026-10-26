@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}{{ item.name }} — The Last Pantry{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ asset('css/pages/adjust.css') }}">
+{% endblock %}
+
+{% block content %}
+{% set status = 'expired' if item.expired else ('soon' if item.expiring_soon else 'fresh') %}
+<section class="adjust adjust--{{ status }}">
+    <header class="adjust__head">
+        {% if item.photo_path %}
+        <img class="adjust__thumb" src="{{ url_for('media', filename=item.photo_path) }}" alt="">
+        {% endif %}
+        <div class="adjust__id">
+            <h1 class="adjust__name">{{ item.name }}</h1>
+            <p class="adjust__meta">
+                {{ item.total_weight }} · {{ item.each_weight }} each
+                {% if item.expire_date %}· expires {{ item.expire_date }}{% endif %}
+                {% if item.shelf %}· {{ item.shelf }}{% endif %}
+            </p>
+        </div>
+        {% if item.days_left is not none %}
+        <span class="pill pill--{{ status }}">
+            {% if status == 'expired' %}{{ -item.days_left }}d{% else %}{{ item.days_left }}d{% endif %}
+        </span>
+        {% endif %}
+    </header>
+
+    <div class="counter">
+        <form method="post" action="{{ url_for('change_units', item_id=item.id) }}">
+            <input type="hidden" name="delta" value="-1">
+            <button class="counter__btn" type="submit" aria-label="Remove one">&minus;</button>
+        </form>
+
+        <span class="counter__num">{{ item.units }}</span>
+
+        <details class="counter__add">
+            <summary class="counter__btn" aria-label="Add more">+</summary>
+            <div class="addmenu">
+                <form class="addmenu__form" method="post">
+                    <label class="field">
+                        <span class="field__label">Units to add</span>
+                        <input type="number" name="units" value="1" min="1"
+                               inputmode="numeric" required>
+                    </label>
+
+                    <button class="btn btn--primary addmenu__one" type="submit" formnovalidate
+                            formaction="{{ url_for('change_units', item_id=item.id) }}">
+                        Add to current expiry
+                    </button>
+
+                    <div class="addmenu__new">
+                        <span class="addmenu__title">…or as a new batch with its own expiry</span>
+                        <div class="chips" role="group" aria-label="Quick expiry">
+                            <button type="button" class="chip" data-add="7d">+1w</button>
+                            <button type="button" class="chip" data-add="1m">+1m</button>
+                            <button type="button" class="chip" data-add="3m">+3m</button>
+                            <button type="button" class="chip" data-add="6m">+6m</button>
+                            <button type="button" class="chip" data-add="1y">+1y</button>
+                            <button type="button" class="chip" data-add="2y">+2y</button>
+                        </div>
+                        <label class="field">
+                            <span class="field__label">New expiry date</span>
+                            <input type="date" id="restock_date" name="expire_date" required>
+                        </label>
+                        <button class="btn" type="submit"
+                                formaction="{{ url_for('restock_item', item_id=item.id) }}">
+                            Add batch
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </details>
+    </div>
+
+    <nav class="adjust__nav">
+        <a class="btn" href="{{ url_for('new_item') }}">Scan another</a>
+        <a class="btn" href="{{ url_for('pantry') }}">Done</a>
+    </nav>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ asset('js/pages/adjust.js') }}"></script>
+{% endblock %}

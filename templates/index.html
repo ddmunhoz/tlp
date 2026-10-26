@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Pantry — The Last Pantry{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ asset('css/pages/index.css') }}">
+{% endblock %}
+
+{% block content %}
+{% if not groups %}
+    <div class="empty-state">
+        <p class="empty">The shelves are bare.</p>
+        <a class="btn btn--primary" href="{{ url_for('new_item') }}">Add your first item</a>
+    </div>
+{% else %}
+    {% for group in groups %}
+    <details class="shelf" open data-shelf-id="{{ group.id or 0 }}">
+        <summary class="shelf__head">
+            <span class="shelf__title-wrap">
+                <span class="shelf__chevron" aria-hidden="true"></span>
+                <h2 class="shelf__name">{{ group.name }}</h2>
+            </span>
+            <span class="shelf__count">{{ group.total }} item{{ '' if group.total == 1 else 's' }}</span>
+        </summary>
+
+        <div class="shelf__tools">
+            <label class="selectall">
+                <input type="checkbox" class="js-select-all">
+                <span>Select all on this page</span>
+            </label>
+        </div>
+
+        <div class="rows__head">
+            <label class="rows__head-sel">
+                <input type="checkbox" class="js-select-all" aria-label="Select all on this page">
+            </label>
+            <button type="button" class="colhead colhead--name" data-sort="name">Name</button>
+            <div class="rows__head-stats">
+                <button type="button" class="colhead colhead--units" data-sort="units">Units</button>
+                <button type="button" class="colhead colhead--total" data-sort="total">Total</button>
+            </div>
+            <button type="button" class="colhead colhead--days" data-sort="days">Expiry</button>
+            <span class="rows__head-actions" aria-hidden="true"></span>
+        </div>
+
+        <ul class="rows">
+            {% for item in group['items'] %}
+            {% set status = 'expired' if item.expired else ('soon' if item.expiring_soon else 'fresh') %}
+            <li class="row row--{{ status }}"
+                data-name="{{ item.name|lower }}"
+                data-units="{{ item.units }}"
+                data-total="{{ item.weight_value * item.units }}"
+                data-days="{{ item.days_left if item.days_left is not none else 999999 }}">
+                <label class="row__sel">
+                    <input type="checkbox" class="js-item" name="item_ids"
+                           value="{{ item.id }}" form="move-form"
+                           aria-label="Select {{ item.name }}">
+                </label>
+
+                <div class="row__name">
+                    {% if item.photo_path %}
+                    <img class="row__thumb" src="{{ url_for('media', filename=item.photo_path) }}" alt="">
+                    {% endif %}
+                    <span class="row__name-text">
+                        <span class="row__title">{{ item.name }}
+                            {% set rnut = item.nutrition | fromjson %}
+                            {% if rnut and rnut.nutriscore %}
+                            <span class="nutriscore nutriscore--mini nutriscore--{{ rnut.nutriscore }}">{{ rnut.nutriscore|upper }}</span>
+                            {% endif %}
+                        </span>
+                    </span>
+                </div>
+
+                <div class="row__stats">
+                    <div class="stat stat--units">
+                        <span class="stat__num">{{ item.units }}</span>
+                    </div>
+                    <div class="stat stat--total">
+                        <span class="stat__num">{{ item.total_weight }}</span>
+                    </div>
+                </div>
+
+                {% if item.days_left is not none %}
+                    {% if status == 'expired' %}
+                        <span class="row__fresh pill pill--expired">Expired {{ -item.days_left }}d</span>
+                    {% elif status == 'soon' %}
+                        <span class="row__fresh pill pill--soon">{{ item.days_left }}d</span>
+                    {% else %}
+                        <span class="row__fresh pill pill--fresh">{{ item.days_left }}d</span>
+                    {% endif %}
+                {% endif %}
+
+                <div class="row__actions">
+                    <a class="btn btn--small" href="{{ url_for('edit_item', item_id=item.id) }}">Edit</a>
+                    <form method="post" action="{{ url_for('delete_item', item_id=item.id) }}"
+                          class="js-confirm" data-confirm="Remove {{ item.name }} from the pantry?">
+                        <button class="btn btn--small btn--danger" type="submit">Delete</button>
+                    </form>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+
+        {% if group.pages > 1 %}
+        <nav class="pager" aria-label="{{ group.name }} pages">
+            {% if group.has_prev %}
+                <a class="btn btn--small" href="{{ group.prev_url }}">Prev</a>
+            {% else %}
+                <span class="btn btn--small pager__off">Prev</span>
+            {% endif %}
+            <span class="pager__at">Page {{ group.page }} of {{ group.pages }}</span>
+            {% if group.has_next %}
+                <a class="btn btn--small" href="{{ group.next_url }}">Next</a>
+            {% else %}
+                <span class="btn btn--small pager__off">Next</span>
+            {% endif %}
+        </nav>
+        {% endif %}
+    </details>
+    {% endfor %}
+
+    <form id="move-form" class="movebar" method="post"
+          action="{{ url_for('move_items') }}" hidden>
+        <span class="movebar__count"><span class="js-move-count">0</span> selected</span>
+        <label class="movebar__to">
+            <span>Move to</span>
+            <select name="shelf_id" aria-label="Target shelf">
+                <option value="0">Unshelved</option>
+                {% for shelf in shelves %}
+                <option value="{{ shelf.id }}">{{ shelf.name }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <button class="btn btn--primary" type="submit">Move</button>
+    </form>
+{% endif %}
+{% endblock %}

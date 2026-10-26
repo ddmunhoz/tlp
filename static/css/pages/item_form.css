@@ -1,0 +1,297 @@
+/* Add/edit — a filled-out shelf label. Fields stack on mobile, share rows wider. */
+
+.item-form {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.5rem 1.4rem 1.4rem;
+}
+
+.item-form .field-row .field { flex: 1 1 100%; }
+
+@media (min-width: 560px) {
+    .item-form .field-row .field { flex: 1 1 0; }
+    /* keep the unit selector narrow next to the weight value */
+    .item-form .field-row .field:has(select) { flex: 0 0 6.5rem; }
+}
+
+/* small helper line under a field label */
+.field__label .hint {
+    display: block;
+    margin-top: 0.2rem;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 400;
+    font-size: 0.66rem;
+    color: var(--muted);
+}
+
+/* ---- unit picker: tappable pills instead of a fiddly mobile combo box ---- */
+.pillset { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.pill { position: relative; margin: 0; }
+.pill input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    margin: 0;
+    cursor: pointer;
+}
+.pill span {
+    display: inline-block;
+    min-width: 3.25rem;
+    padding: 0.65rem 1rem;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ink-dim);
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background .12s ease, border-color .12s ease, color .12s ease;
+}
+/* selected unit: the soft mint pill, matching the tags + active filters */
+.pill input:checked + span {
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+    color: #74e9b3;
+    font-weight: 500;
+}
+.pill input:focus-visible + span { box-shadow: 0 0 0 2px var(--brass); }
+
+/* quick expiry chips (.chips/.chip) now live in app.css — shared with restock */
+
+/* ---- barcode scan + lookup ---- */
+.scan__row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: stretch; }
+.scan__row input { flex: 1 1 12rem; min-width: 0; }   /* buttons drop below when tight */
+.scan__row .btn { flex: 0 0 auto; }
+.scan__status {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin: 0.5rem 0 0;
+    min-height: 1rem;
+}
+.scan__status--ok { color: var(--fresh); }
+.scan__status--warn { color: var(--amber); }
+
+.scan__cam {
+    margin-top: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+}
+/* the display:flex above beats the bare [hidden] attribute, so re-hide explicitly —
+   otherwise the camera box shows on load and its width overflows the phone. */
+.scan__cam[hidden] { display: none; }
+.scan__video {
+    width: 100%;
+    max-width: min(100%, 420px);   /* never wider than the viewport */
+    height: 260px;
+    object-fit: cover;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: #000;
+}
+
+/* ---- fetched product preview ---- */
+.product {
+    display: flex;
+    flex-wrap: wrap;                 /* facts drop under the photo on a narrow phone */
+    gap: 1rem;
+    margin: 0 0 1.3rem;
+    padding: 1rem;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+}
+.product.is-empty { display: none; }
+.product__img {
+    flex: 0 0 auto;
+    width: 84px;
+    height: 84px;
+    object-fit: contain;
+    border-radius: var(--radius);
+}
+.product__img[hidden] { display: none; }
+.product__facts { min-width: 0; flex: 1 1 220px; }
+.product__note {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin: 0.6rem 0 0;
+}
+
+/* one column on phones so nothing overflows; two when there's width to spare */
+.facts { margin: 0; display: grid; grid-template-columns: 1fr; gap: 0.25rem 1rem; }
+@media (min-width: 520px) { .facts { grid-template-columns: 1fr 1fr; } }
+.facts__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    border-bottom: 1px dotted var(--line);
+    padding-bottom: 0.15rem;
+}
+.facts dt { color: var(--muted); margin: 0; }
+.facts dd { color: var(--ink); margin: 0; font-variant-numeric: tabular-nums; }
+.product__facts .nutriscore { margin-bottom: 0.6rem; }
+
+/* ---- item toggles — pill switches on the form (fluid, exclude-from-stats) ---- */
+.itoggles { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.itoggle {
+    --tog: var(--accent);            /* per-variant "on" colour */
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 0.95rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--bg-2);
+    color: var(--ink-dim);
+    cursor: pointer;
+    user-select: none;
+    transition: border-color .12s ease, color .12s ease, background .12s ease;
+}
+.itoggle--fluid   { --tog: #5aa9e6; }   /* water-blue */
+.itoggle--exclude { --tog: var(--amber); }
+.itoggle:hover { border-color: var(--brass); }
+.itoggle__input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.itoggle__icon { width: 1.2rem; height: 1.2rem; flex: none; }
+.itoggle__state {
+    margin-left: 0.3rem;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+}
+.itoggle__state::before { content: "Off"; }
+
+.itoggle:has(.itoggle__input:checked) {
+    border-color: var(--tog);
+    color: var(--ink);
+    background: color-mix(in srgb, var(--tog) 14%, transparent);
+}
+.itoggle:has(:checked):hover { border-color: var(--tog); }
+.itoggle:has(:checked) .itoggle__icon,
+.itoggle:has(:checked) .itoggle__state { color: var(--tog); }
+.itoggle:has(:checked) .itoggle__state::before { content: "On"; }
+.itoggle:has(:focus-visible) { box-shadow: 0 0 0 2px color-mix(in srgb, var(--tog) 55%, transparent); }
+
+/* faded + inert while a master switch (exclude-from-stats) overrides it */
+.itoggle.is-disabled {
+    opacity: 0.4;
+    pointer-events: none;
+    filter: grayscale(0.6);
+}
+
+/* ---- calories helper: work it out from the label ---- */
+.calc-row { display: flex; gap: 0.5rem; align-items: stretch; }
+.calc-row > input { flex: 1; min-width: 0; }
+.calc { position: relative; flex: none; }
+.calc__toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 100%;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--bg-2);
+    color: var(--ink-dim);
+    cursor: pointer;
+    list-style: none;
+    transition: border-color .12s ease, color .12s ease;
+}
+.calc__toggle::-webkit-details-marker { display: none; }
+.calc__toggle::marker { content: ""; }
+.calc__toggle:hover { border-color: var(--brass); color: var(--ink); }
+.calc[open] > .calc__toggle { border-color: var(--brass); color: var(--accent); }
+.calc__toggle svg { width: 1.2rem; height: 1.2rem; }
+
+.calc__panel {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    width: 17rem;
+    z-index: 15;
+    padding: 1rem;
+    background: var(--surface-hi);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+}
+.calc__panel .field { margin-bottom: 0.7rem; }
+.calc__hint { font-size: 0.8rem; color: var(--ink-dim); margin: 0 0 0.8rem; }
+.calc__note {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin: 0 0 0.8rem;
+}
+.calc__note .calc__weight { color: var(--ink); }
+
+/* calculator disabled until a weight exists (typed or from a lookup) */
+.calc.is-disabled { opacity: 0.4; }
+.calc.is-disabled .calc__toggle { cursor: not-allowed; border-color: var(--line); color: var(--muted); }
+.calc.is-disabled .calc__toggle:hover { border-color: var(--line); color: var(--muted); }
+
+/* --- tag pills + entry: a wrap of pills, no outer box (like .chips) --------- */
+.tags-input {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+}
+.tags-input__chips {
+    display: contents;   /* chips flow inline with the entry box */
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+/* the entry is itself a pill, matching the chips it sits beside */
+.tags-input__entry {
+    flex: 1 0 9rem;
+    min-width: 9rem;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    padding: 0.5rem 0.85rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--bg-2);
+    color: var(--ink);
+    outline: none;
+}
+.tags-input__entry::placeholder { color: var(--muted); }
+.tags-input__entry:focus { border-color: var(--brass); }
+/* the "used before" suggestion pills sit under the entry, slightly apart. A strip of
+   FIXED height that scrolls inside: sixty-odd tags used to run a full screen past the
+   entry and shrink as you typed, which on a phone dragged the box out from under the
+   keyboard with every letter. Now the page never changes height while you type. */
+.js-tags + .tag-suggest { margin-top: 0.55rem; }
+.tag-suggest--strip {
+    align-content: flex-start;
+    height: 7.4rem;                 /* three rows of pills, give or take */
+    overflow-y: auto;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: color-mix(in srgb, var(--bg-2) 60%, transparent);
+    scrollbar-width: thin;
+}
+.tag-suggest--strip .tag-pill[hidden] { display: none; }
+.tag-suggest__none {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+}
+.tag-suggest__none[hidden] { display: none; }

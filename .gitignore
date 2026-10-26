@@ -1,0 +1,15 @@
+# python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+
+# app data — db, backups, csv mirror all live here and must never be committed
+data/
+
+# editor noise
+.DS_Store
+
+# a prod backup used to live here; never track db files again
+prod_db/
+*.db

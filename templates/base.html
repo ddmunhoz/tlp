@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}The Last Pantry{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" href="{{ url_for('index') }}">The Last Pantry</a>
+        <nav class="topnav">
+            <a href="{{ url_for('new_item') }}">scan</a>
+            <a href="{{ url_for('pantry') }}">Pantry</a>
+            <a class="topnav__icon" href="{{ url_for('shelves_page') }}" aria-label="Shelves" title="Shelves">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+                    <path d="M3 10h18"></path>
+                    <path d="M3 15h18"></path>
+                </svg>
+            </a>
+            <a class="topnav__icon" href="{{ url_for('tags_page') }}" aria-label="Tags" title="Tags">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                    <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                </svg>
+            </a>
+            <a class="topnav__icon" href="{{ url_for('meals_page') }}" aria-label="Meals" title="Meals">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M7 5v4a2 2 0 0 1-4 0V5"></path>
+                    <path d="M5 9v10"></path>
+                    <path d="M18 5c-1.4 0-2.5 1.8-2.5 4.5S16.6 13.5 18 13.5"></path>
+                    <path d="M18 13.5V19"></path>
+                </svg>
+            </a>
+            <a class="topnav__icon" href="{{ url_for('statistics') }}" aria-label="Statistics" title="Statistics">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="4" y1="20" x2="4" y2="12"></line>
+                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                    <line x1="20" y1="20" x2="20" y2="14"></line>
+                </svg>
+            </a>
+            <a class="topnav__icon" href="{{ url_for('activity_page') }}" aria-label="Activity" title="Activity">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                    <rect x="8" y="2" width="8" height="4" rx="1"></rect>
+                    <line x1="9" y1="12" x2="15" y2="12"></line>
+                    <line x1="9" y1="16" x2="15" y2="16"></line>
+                </svg>
+            </a>
+            <a class="topnav__icon" href="{{ url_for('settings_page') }}" aria-label="Settings" title="Settings">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+            </a>
+        </nav>
+    </header>
+
+    <main class="content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flashes">
+                    {% for category, message in messages %}
+                        <li class="flash flash--{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="{{ asset('js/app.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+{% block title %}{{ "Edit item" if item and item.id else "Add item" }} — The Last Pantry{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ asset('css/pages/item_form.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="page-head">
+    <h1>{{ "Edit item" if item and item.id else "Add item" }}</h1>
+</section>
+
+<form class="item-form" method="post" action="{{ action }}"
+      data-lookup-base="{{ url_for('product_lookup', barcode='') }}"
+      data-pantry-base="{{ url_for('pantry_lookup', barcode='') }}"
+      data-zxing-src="{{ url_for('static', filename='js/vendor/zxing/zxing.min.js') }}"
+      {% if not (item and item.id) %}data-autoscan="1"{% endif %}>
+
+    <div class="scan">
+        <label class="field">
+            <span class="field__label">Barcode</span>
+            <div class="scan__row">
+                <input type="text" name="barcode" id="barcode" inputmode="numeric"
+                       autocomplete="off" placeholder="Scan or type a barcode"
+                       value="{{ item.barcode if item and item.barcode else '' }}">
+                <button type="button" class="btn js-scan" hidden>Scan</button>
+                <button type="button" class="btn js-lookup">Look up</button>
+            </div>
+            <p class="scan__status" role="status" aria-live="polite"></p>
+        </label>
+
+        <div class="scan__cam" hidden>
+            <video class="scan__video" playsinline muted></video>
+            <button type="button" class="btn btn--small js-scan-cancel">Cancel</button>
+        </div>
+    </div>
+
+    {# hidden bits carried to the server on save #}
+    <input type="hidden" name="image_url" id="image_url" value="">
+    <input type="hidden" name="nutrition" id="nutrition"
+           value="{{ item.nutrition if item and item.nutrition else '' }}">
+    <input type="hidden" name="photo_path" id="photo_path"
+           value="{{ item.photo_path if item and item.photo_path else '' }}">
+
+    {% set nut = (item.nutrition | fromjson) if item and item.nutrition else None %}
+    <div class="product{% if not (item and (item.photo_path or nut)) %} is-empty{% endif %}"
+         id="product-preview">
+        <img class="product__img" alt="Product photo"
+             {% if item and item.photo_path %}src="{{ url_for('media', filename=item.photo_path) }}"{% else %}hidden{% endif %}>
+        <div class="product__facts">
+            {% if nut and nut.nutriscore %}
+            <span class="nutriscore nutriscore--{{ nut.nutriscore }}">Nutri-Score {{ nut.nutriscore|upper }}</span>
+            {% endif %}
+            {# nutrition standardised per 100 g/ml #}
+            {% set basis = nut.per_100g if nut else None %}
+            {% set basis_label = 'Per 100 g' %}
+            {% if basis %}
+            <dl class="facts">
+                {% for label, key, unit in [
+                    ('Energy', 'energy_kcal', 'kcal'), ('Fat', 'fat', 'g'),
+                    ('Saturated fat', 'saturated_fat', 'g'), ('Trans fat', 'trans_fat', 'g'),
+                    ('Cholesterol', 'cholesterol', 'mg'), ('Sodium', 'sodium', 'mg'),
+                    ('Carbohydrates', 'carbohydrates', 'g'), ('Fibre', 'fiber', 'g'),
+                    ('Sugars', 'sugars', 'g'), ('Added sugars', 'added_sugars', 'g'),
+                    ('Protein', 'proteins', 'g'), ('Salt', 'salt', 'g'),
+                    ('Calcium', 'calcium', 'mg'), ('Iron', 'iron', 'mg'),
+                    ('Potassium', 'potassium', 'mg')] %}
+                    {% if basis.get(key) is not none %}
+                    <div class="facts__row"><dt>{{ label }}</dt><dd>{{ basis[key] }} {{ unit }}</dd></div>
+                    {% endif %}
+                {% endfor %}
+            </dl>
+            <p class="product__note">{{ basis_label }} · Data: Open Food Facts (ODbL)</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <label class="field">
+        <span class="field__label">Name <em>*</em></span>
+        <input type="text" name="name" id="name" required value="{{ item.name if item else '' }}">
+    </label>
+
+    <div class="field">
+        <label class="field__label" for="calories">Calories <em>*</em> <small class="hint">kcal for this item — used to work out how long the pantry lasts</small></label>
+        <div class="calc-row">
+            <input type="number" name="calories" id="calories" min="0" step="any" inputmode="decimal" required
+                   placeholder="e.g. 430" value="{{ item.calories if item and item.calories is not none else '' }}">
+            <details class="calc">
+                <summary class="calc__toggle" title="Work it out from the label"
+                         aria-label="Calculate calories from the nutrition label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="5" y="3" width="14" height="18" rx="2"></rect>
+                        <path d="M8 7h8"></path>
+                        <path d="M8 11h.01M12 11h.01M16 11h.01"></path>
+                        <path d="M8 15h.01M12 15h.01M16 15h.01"></path>
+                    </svg>
+                </summary>
+                <div class="calc__panel">
+                    <p class="calc__hint">From the package nutrition label:</p>
+                    <label class="field">
+                        <span class="field__label">Calories per serving</span>
+                        <input type="number" id="calc_per_serving" min="0" step="any" inputmode="decimal" placeholder="e.g. 90">
+                    </label>
+                    <label class="field">
+                        <span class="field__label">Serving size (<span class="calc__unit">g</span>)</span>
+                        <input type="number" id="calc_serving" min="0" step="any" inputmode="decimal" placeholder="e.g. 18">
+                    </label>
+                    <p class="calc__note">Package weight: <span class="calc__weight">—</span></p>
+                    <button type="button" class="btn btn--small btn--primary" id="calc_do">Fill calories</button>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <div class="field-row">
+        <label class="field">
+            <span class="field__label">Units <em>*</em></span>
+            <input type="number" name="units" min="1" step="1" inputmode="numeric"
+                   value="{{ item.units if item and item.units else 1 }}">
+        </label>
+
+        <label class="field">
+            <span class="field__label">Weight <em>*</em></span>
+            <input type="number" name="weight_value" id="weight_value" min="0" step="any"
+                   inputmode="decimal" required value="{{ item.weight_value if item else '' }}">
+        </label>
+    </div>
+
+    <div class="field">
+        <span class="field__label">Unit <em>*</em></span>
+        <div class="pillset" role="radiogroup" aria-label="Weight unit">
+            {% for u in units %}
+            <label class="pill">
+                <input type="radio" name="weight_unit" value="{{ u }}" required
+                       {% if (item and item.weight_unit == u) or (not item and u == 'g') %}checked{% endif %}>
+                <span>{{ u }}</span>
+            </label>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="field">
+        <div class="itoggles">
+            <label class="itoggle itoggle--fluid">
+                <input class="itoggle__input" type="checkbox" name="is_fluid" value="yes"
+                       id="is_fluid" {% if item and item.is_fluid %}checked{% endif %}>
+                <svg class="itoggle__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M9 2h6"></path>
+                    <path d="M9 2v3l-1.2 1.2A3 3 0 0 0 7 8.3V19a3 3 0 0 0 3 3h4a3 3 0 0 0 3-3V8.3a3 3 0 0 0-.8-2.1L15 5V2"></path>
+                    <path d="M7 12.5h10"></path>
+                </svg>
+                <span>Counts as drinking fluid</span>
+                <span class="itoggle__state" aria-hidden="true"></span>
+            </label>
+
+            <label class="itoggle itoggle--exclude">
+                <input class="itoggle__input" type="checkbox" name="exclude_stats" value="yes"
+                       id="exclude_stats" {% if item and item.exclude_stats %}checked{% endif %}>
+                <svg class="itoggle__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 20V13"></path>
+                    <path d="M10 20V9"></path>
+                    <path d="M16 20v-4"></path>
+                    <path d="M3 3l18 18"></path>
+                </svg>
+                <span>Exclude from statistics</span>
+                <span class="itoggle__state" aria-hidden="true"></span>
+            </label>
+        </div>
+    </div>
+
+    <div class="field">
+        <span class="field__label">Expire date <em>*</em></span>
+        <div class="chips" role="group" aria-label="Quick expiry">
+            <button type="button" class="chip" data-add="7d">+1w</button>
+            <button type="button" class="chip" data-add="1m">+1m</button>
+            <button type="button" class="chip" data-add="3m">+3m</button>
+            <button type="button" class="chip" data-add="6m">+6m</button>
+            <button type="button" class="chip" data-add="1y">+1y</button>
+            <button type="button" class="chip" data-add="2y">+2y</button>
+        </div>
+        <input type="date" name="expire_date" id="expire_date" required
+               value="{{ item.expire_date if item else '' }}">
+    </div>
+
+    <label class="field">
+        <span class="field__label">Shelf</span>
+        <select name="shelf_id">
+            <option value="">Unshelved</option>
+            {% for shelf in shelves %}
+                <option value="{{ shelf.id }}"
+                    {% if item and (item.shelf_id|string) == (shelf.id|string) %}selected{% endif %}>
+                    {{ shelf.name }}
+                </option>
+            {% endfor %}
+        </select>
+    </label>
+
+    <div class="field">
+        <span class="field__label">Tags
+            <small class="hint">group interchangeable products — e.g. tag every rice “rice”, then a meal can call for any of them</small></span>
+        {# existing tags render as chips with hidden inputs, so they submit even without
+           JS; tags_input.js adds/removes chips. Every tag used before is offered as a
+           tappable pill below, filtered as you type — datalist autocomplete never
+           surfaces on mobile, so the suggestions are real buttons instead. #}
+        <div class="tags-input js-tags">
+            <ul class="tags-input__chips js-tag-chips">
+                {% for t in item_tags %}
+                <li class="tag-chip">
+                    <span class="tag-chip__label">{{ t }}</span>
+                    <input type="hidden" name="tags" value="{{ t }}">
+                    <button type="button" class="tag-chip__rm js-tag-rm" aria-label="Remove {{ t }}">&times;</button>
+                </li>
+                {% endfor %}
+            </ul>
+            <input type="text" class="tags-input__entry js-tag-entry"
+                   placeholder="Add a tag…" aria-label="Add a tag" autocomplete="off">
+        </div>
+        {% if all_tags %}
+        <div class="tag-suggest tag-suggest--strip js-tag-suggest">
+            <span class="tag-suggest__lbl">Used before</span>
+            {% for name in all_tags %}
+            <button type="button" class="tag-pill" data-tag="{{ name }}">{{ name }}</button>
+            {% endfor %}
+            <span class="tag-suggest__none js-tag-suggest-none" hidden>nothing used before matches</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="form-actions">
+        <button class="btn btn--primary" type="submit">Save</button>
+        <a class="btn" href="{{ url_for('pantry') }}">Cancel</a>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ asset('js/pages/item_form.js') }}"></script>
+<script src="{{ asset('js/pages/tags_input.js') }}"></script>
+{% endblock %}

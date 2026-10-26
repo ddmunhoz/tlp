@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Meals — The Last Pantry{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ asset('css/pages/meals.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="page-head page-head--row">
+    <h1>Your menu{% if saved %} <span class="menu-count">{{ menu.meals }}
+        meal{{ '' if menu.meals == 1 else 's' }} ·
+        <span class="js-menu-servings">{{ menu.servings }}</span> servings{% if menu.days is not none %} ·
+        <span class="js-menu-days">{{ menu.days }}</span> days{% endif %}</span>{% endif %}</h1>
+    <a class="btn btn--primary" href="{{ url_for('build_meal') }}">Build a meal</a>
+</section>
+
+{% if not saved %}
+<div class="menu-empty">
+    <p class="menu-empty__lead">No meals on your menu yet.</p>
+    <p class="muted">Build a meal from your pantry — set portions and see its calories,
+        nutrition, and how many servings your stock can cover.</p>
+    <a class="btn btn--primary" href="{{ url_for('build_meal') }}">Build your first meal</a>
+</div>
+{% else %}
+<section class="menu js-plan">
+    {# shared pantry planner: set servings per meal; the pool below reacts live #}
+    <script type="application/json" class="js-plan-data">{{ plan_data | tojson }}</script>
+    <p class="plan-basis js-plan-basis muted" hidden></p>
+    <div class="plan-usage js-plan-usage" hidden>
+        <div class="plan-usage__head">
+            <span class="plan-usage__title">Pantry for this plan</span>
+            <span class="plan-verdict js-plan-verdict"></span>
+        </div>
+        <div class="plan-usage__bars js-plan-bars"></div>
+    </div>
+
+    {# BOM — shopping list: pops up when the plan needs more than you have in stock,
+       listing how much of each ingredient to buy to make every planned serving. #}
+    <div class="plan-bom js-plan-bom" hidden>
+        <div class="plan-bom__head">
+            <span class="plan-bom__title">BOM</span>
+            <span class="plan-bom__sub">buy this to make every planned serving</span>
+        </div>
+        <ul class="plan-bom__list js-plan-bom-list"></ul>
+    </div>
+
+    <ul class="menu__list">
+        {% for m in saved %}
+        <li class="menu-card js-menu-card">
+            <div class="menu-card__main">
+                <span class="menu-card__name">
+                    {{ m.name }}
+                    {% if m.unsourced %}
+                    <span class="menu-warn" title="Can't cook from current stock — no longer in pantry: {{ m.unsourced | join(', ') }}">⚠️</span>
+                    {% endif %}
+                </span>
+                <span class="menu-card__meta">
+                    {{ m.total_kcal | round | int }} kcal ·
+                    {{ m['items'] | length }} item{{ '' if m['items']|length == 1 else 's' }}
+                </span>
+                <div class="menu-card__gauges">
+                    {% for who, cal in [('M', targets.man), ('W', targets.woman), ('C', targets.child)] %}
+                    {% set pct = (m.total_kcal / cal * 100) if cal else 0 %}
+                    <span class="mini-gauge" title="{{ pct | round | int }}% of a {{ who }} day">
+                        <span class="mini-gauge__lbl">{{ who }}</span>
+                        <span class="mini-gauge__track"><span class="mini-gauge__fill" style="width: {{ [pct, 100] | min }}%"></span></span>
+                        <span class="mini-gauge__pct">{{ pct | round | int }}%</span>
+                    </span>
+                    {% endfor %}
+                </div>
+                {% if m.nutrients %}
+                <div class="menu-card__nutrients">
+                    {% for n in nutrient_meta if n.key in m.nutrients %}
+                    {% set npct = (m.nutrients[n.key] / nutrient_targets[n.key] * 100) if nutrient_targets[n.key] else 0 %}
+                    <span class="mini-nbar" title="{{ n.label }}: {{ npct | round | int }}% of an adult's daily {{ n.label | lower }}">
+                        <span class="mini-nbar__lbl">{{ n.label }}</span>
+                        <span class="mini-nbar__track"><span class="mini-nbar__fill" style="width: {{ [npct, 100] | min }}%"></span></span>
+                        <span class="mini-nbar__pct">{{ npct | round | int }}%</span>
+                    </span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {# hover popover: the meal's ingredients #}
+                <div class="menu-pop" hidden>
+                    <span class="menu-pop__title">{{ m.name }}</span>
+                    <ul class="menu-pop__list">
+                        {% for it in m['items'] %}
+                        <li><span class="menu-pop__ing">{% if it.source_type == 'tag' %}🏷 {% endif %}{{ it.name }}</span>
+                            <span class="menu-pop__amt">{{ it.grams | round | int }} {{ it.unit }} · {{ (it.grams * it.kcal_per_g) | round | int }} kcal</span></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            <div class="menu-card__side">
+                <div class="plan-step js-plan-step" data-meal-id="{{ m.id }}">
+                    <span class="plan-step__cap">Make</span>
+                    <span class="stepper">
+                        <button type="button" class="stepper__btn js-plan-dec" aria-label="One fewer serving">−</button>
+                        <input type="number" class="stepper__n js-plan-n" min="0" step="1"
+                               inputmode="numeric" autocomplete="off" value="{{ m.planned_servings or 0 }}"
+                               aria-label="Planned servings">
+                        <button type="button" class="stepper__btn js-plan-inc" aria-label="One more serving">+</button>
+                    </span>
+                    <span class="plan-step__room js-plan-room" aria-label="servings left in stock"></span>
+                </div>
+                <span class="plan-step__feeds js-plan-feeds" aria-label="how long this feeds your household"></span>
+                <div class="menu-card__actions">
+                    <a class="btn btn--small" href="{{ url_for('edit_meal', meal_id=m.id) }}">Edit</a>
+                    <form method="post" action="{{ url_for('remove_meal', meal_id=m.id) }}"
+                          class="js-confirm" data-confirm="Remove '{{ m.name }}' from your menu?">
+                        <button class="btn btn--small btn--danger" type="submit">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ asset('js/pages/meals.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,57 @@
+/* Shelf management — add a shelf, rename or remove existing ones. */
+
+.shelf-new {
+    display: flex;
+    gap: 0.6rem;
+    margin-bottom: 1.75rem;
+    max-width: 480px;
+}
+.shelf-new input {
+    flex: 1;
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    padding: 0.6rem 0.7rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--bg-2);
+    color: var(--ink);
+}
+.shelf-new input:focus {
+    outline: none;
+    border-color: var(--brass);
+    box-shadow: 0 0 0 1px var(--brass);
+}
+
+.shelf-manage { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
+.shelf-manage__row {
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 0.7rem 0.9rem;
+    flex-wrap: wrap;
+}
+.shelf-rename { display: flex; gap: 0.5rem; align-items: center; flex: 1; margin: 0; }
+.shelf-rename input {
+    flex: 1;
+    min-width: 8rem;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.1rem;
+    letter-spacing: -0.01em;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--ink);
+}
+.shelf-rename input:hover { border-color: var(--line); }
+.shelf-rename input:focus {
+    outline: none;
+    background: var(--bg-2);
+    border-color: var(--brass);
+}
+.shelf-manage__row > form:last-child { margin: 0; }

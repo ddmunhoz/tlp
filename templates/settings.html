@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% block title %}Settings — The Last Pantry{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ asset('css/pages/settings.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="page-head">
+    <h1>Settings</h1>
+</section>
+
+<div class="settings">
+    <form class="settings-grid-2" method="post" action="{{ url_for('save_settings') }}">
+        <section class="scard">
+            <h2 class="scard__title">General</h2>
+            <label class="field">
+                <span class="field__label">Warn when items expire within (days)</span>
+                <input type="number" name="expiry_warn_days" min="0" step="1"
+                       value="{{ settings.expiry_warn_days }}">
+            </label>
+            <label class="field">
+                <span class="field__label">Daily backups to keep</span>
+                <input type="number" name="backup_keep" min="1" step="1"
+                       value="{{ settings.backup_keep }}">
+            </label>
+            <label class="field">
+                <span class="field__label">Items per shelf before paging (0 = show all)</span>
+                <input type="number" name="shelf_page_size" min="0" step="1"
+                       value="{{ settings.shelf_page_size }}">
+            </label>
+            <label class="field">
+                <span class="field__label">Activity history to keep (days)</span>
+                <input type="number" name="activity_keep_days" min="0" step="1"
+                       value="{{ settings.activity_keep_days }}">
+            </label>
+            <label class="field">
+                <span class="field__label">Open Food Facts region (barcode lookups)</span>
+                <select name="off_country">
+                    {% set region = settings.off_country %}
+                    <option value="world" {% if region == 'world' %}selected{% endif %}>Global (world)</option>
+                    <option value="ca" {% if region == 'ca' %}selected{% endif %}>Canada (bilingual FR/EN)</option>
+                    <option value="us" {% if region == 'us' %}selected{% endif %}>United States</option>
+                </select>
+            </label>
+        </section>
+
+        <section class="scard">
+            <h2 class="scard__title">Household &amp; statistics</h2>
+            <p class="muted">Who eats from the pantry, plus the daily calories and
+                drinking water to budget per head — this drives the "how long will it
+                last" estimates for food and water.</p>
+            <div class="hh-table">
+                <div class="hh-head">
+                    <span></span><span>People</span><span>kcal/day</span><span>Water&nbsp;L/day</span>
+                </div>
+                <div class="hh-row">
+                    <span class="hh-label">Men</span>
+                    <input type="number" name="household_men" min="0" step="1" aria-label="Men" value="{{ settings.household_men }}">
+                    <input type="number" name="cal_per_man" min="0" step="50" aria-label="kcal/day per man" value="{{ settings.cal_per_man }}">
+                    <input type="number" name="water_per_man" min="0" step="0.1" aria-label="Water litres/day per man" value="{{ settings.water_per_man }}">
+                </div>
+                <div class="hh-row">
+                    <span class="hh-label">Women</span>
+                    <input type="number" name="household_women" min="0" step="1" aria-label="Women" value="{{ settings.household_women }}">
+                    <input type="number" name="cal_per_woman" min="0" step="50" aria-label="kcal/day per woman" value="{{ settings.cal_per_woman }}">
+                    <input type="number" name="water_per_woman" min="0" step="0.1" aria-label="Water litres/day per woman" value="{{ settings.water_per_woman }}">
+                </div>
+                <div class="hh-row">
+                    <span class="hh-label">Children</span>
+                    <input type="number" name="household_children" min="0" step="1" aria-label="Children" value="{{ settings.household_children }}">
+                    <input type="number" name="cal_per_child" min="0" step="50" aria-label="kcal/day per child" value="{{ settings.cal_per_child }}">
+                    <input type="number" name="water_per_child" min="0" step="0.1" aria-label="Water litres/day per child" value="{{ settings.water_per_child }}">
+                </div>
+            </div>
+            <label class="field">
+                <span class="field__label">Meals per day, per person</span>
+                <input type="number" name="meals_per_day" min="1" step="1"
+                       value="{{ settings.meals_per_day }}">
+                <small class="muted">turns planned servings into days of meals:
+                    servings ÷ (people × meals a day)</small>
+            </label>
+            <label class="field field--check">
+                <input type="checkbox" name="exclude_expired" value="yes"
+                       {% if settings.exclude_expired == 'yes' %}checked{% endif %}>
+                <span>Exclude expired items from statistics</span>
+            </label>
+        </section>
+
+        <section class="scard">
+            <h2 class="scard__title">Daily nutrient targets</h2>
+            <p class="muted">Reference intake per adult per day — drives the
+                "days of nutrition" tower, which divides the pantry's total of each
+                nutrient by your household's daily need. Children are counted as
+                adults here.</p>
+            <div class="nt-grid">
+                <label class="field">
+                    <span class="field__label">Protein (g)</span>
+                    <input type="number" name="protein_per_adult" min="0" step="1" value="{{ settings.protein_per_adult }}">
+                </label>
+                <label class="field">
+                    <span class="field__label">Fibre (g)</span>
+                    <input type="number" name="fiber_per_adult" min="0" step="1" value="{{ settings.fiber_per_adult }}">
+                </label>
+                <label class="field">
+                    <span class="field__label">Calcium (mg)</span>
+                    <input type="number" name="calcium_per_adult" min="0" step="10" value="{{ settings.calcium_per_adult }}">
+                </label>
+                <label class="field">
+                    <span class="field__label">Iron (mg)</span>
+                    <input type="number" name="iron_per_adult" min="0" step="1" value="{{ settings.iron_per_adult }}">
+                </label>
+                <label class="field">
+                    <span class="field__label">Potassium (mg)</span>
+                    <input type="number" name="potassium_per_adult" min="0" step="50" value="{{ settings.potassium_per_adult }}">
+                </label>
+            </div>
+        </section>
+
+        <div class="settings-save">
+            <button class="btn btn--primary" type="submit">Save settings</button>
+        </div>
+    </form>
+
+    <div class="settings-grid-2">
+    <form method="post" action="{{ url_for('change_password') }}">
+        <section class="scard">
+            <h2 class="scard__title">Security</h2>
+            {% if default_password %}
+            <p class="muted settings-warn">You're on the default password
+                (<code>admin</code>) — set your own below.</p>
+            {% endif %}
+            <label class="field">
+                <span class="field__label">Current password</span>
+                <input type="password" name="current_password" autocomplete="current-password">
+            </label>
+            <label class="field">
+                <span class="field__label">New password</span>
+                <input type="password" name="new_password" autocomplete="new-password">
+            </label>
+            <label class="field">
+                <span class="field__label">Confirm new password</span>
+                <input type="password" name="confirm_password" autocomplete="new-password">
+            </label>
+            <div class="settings-actions">
+                <button class="btn btn--primary" type="submit">Change password</button>
+                <a class="btn" href="{{ url_for('logout') }}">Sign out</a>
+            </div>
+        </section>
+    </form>
+
+    <section class="scard">
+        <h2 class="scard__title">Data safety</h2>
+        <p class="muted">A fresh CSV of the whole pantry is written after every change,
+            so your data is always readable even if the app goes down. The database is
+            also backed up automatically once a day (keeping the newest
+            {{ settings.backup_keep }}); "Backup now" takes an extra one on demand.</p>
+        <div class="settings-actions">
+            <a class="btn" href="{{ url_for('export_csv') }}">Download CSV export</a>
+            <form method="post" action="{{ url_for('backup_now') }}">
+                <button class="btn" type="submit">Backup now</button>
+            </form>
+        </div>
+        <h3 class="scard__sub">Recent backups</h3>
+        {% if backups %}
+        <ul class="backup-list">
+            {% for path in backups %}
+            <li>{{ path.split('/')[-1] }}</li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="muted">No backups yet.</p>
+        {% endif %}
+    </section>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+{% block title %}Pantry — The Last Pantry{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ asset('css/pages/index.css') }}">
+{% endblock %}
+
+{% block content %}
+{# a filter row as ONE summary pill + a panel with the chips (0012). filter_picker.js
+   turns the panel into a popover / bottom sheet; without JS it just sits open under
+   the pill, which is the old plain row of chips. Chips come in through the caller. #}
+{% macro picker(label, value, key, find=none) %}
+<div class="search__macros search__macros--pick js-fpick">
+    <span class="search__lbl">{{ label }}</span>
+    <button type="button" class="chip fpick__btn js-fpick-btn {{ 'is-on' if value }}">
+        <span class="fpick__val">{{ label }} · {{ value or 'Any' }}</span><span class="fpick__caret" aria-hidden="true">▾</span>
+    </button>
+    <div class="fpick__panel js-fpick-panel" id="fpick-{{ key }}">
+        {% if find %}
+        <input type="search" class="fpick__find js-fpick-find" placeholder="{{ find }}"
+               autocomplete="off" aria-label="{{ find }}">
+        {% endif %}
+        <div class="fpick__chips">{{ caller() }}</div>
+        <p class="fpick__none js-fpick-none" hidden>nothing matches that</p>
+    </div>
+</div>
+{% endmacro %}
+{% if groups or search.active %}
+<div class="search">
+    <form class="search__form" method="get" action="{{ url_for('pantry') }}" role="search">
+        <input class="search__input" type="search" name="q" value="{{ search.q }}"
+               placeholder="Search items by name…" aria-label="Search items by name">
+        {% if search.macro %}<input type="hidden" name="macro" value="{{ search.macro }}">{% endif %}
+        {% if search.nova %}<input type="hidden" name="nova" value="{{ search.nova }}">{% endif %}
+        {% if search.grade %}<input type="hidden" name="grade" value="{{ search.grade }}">{% endif %}
+        {% if search.year is not none %}<input type="hidden" name="year" value="{{ search.year }}">{% endif %}
+        {% if search.fluid %}<input type="hidden" name="fluid" value="1">{% endif %}
+        {% if search.excluded %}<input type="hidden" name="excluded" value="1">{% endif %}
+        {% if search.tag %}<input type="hidden" name="tag" value="{{ search.tag }}">{% endif %}
+        <button class="btn btn--primary" type="submit">Search</button>
+    </form>
+    {% set year_arg = search.year if search.year is not none else none %}
+    {% set tag_arg = search.tag or none %}
+    <div class="search__macros">
+        <span class="search__lbl">Type</span>
+        <a class="chip {{ 'is-on' if not search.fluid and not search.excluded }}"
+           href="{{ url_for('pantry', q=search.q or none, year=year_arg, tag=tag_arg) }}">All</a>
+        <a class="chip {{ 'is-on' if search.fluid }}"
+           href="{{ url_for('pantry', q=search.q or none, year=year_arg, tag=tag_arg, fluid=1) }}">Water</a>
+        <a class="chip {{ 'is-on' if search.excluded }}"
+           href="{{ url_for('pantry', q=search.q or none, year=year_arg, tag=tag_arg, excluded=1) }}">Excluded</a>
+    </div>
+    {% if filter_years %}
+    {% call picker('Expiry', search.year, 'year') %}
+        <a class="chip {{ 'is-on' if search.year is none }}"
+           href="{{ url_for('pantry', q=search.q or none, tag=tag_arg, fluid=1 if search.fluid else none, excluded=1 if search.excluded else none) }}">Any</a>
+        {% for y in filter_years %}
+        <a class="chip {{ 'is-on' if search.year == y }}" data-opt="{{ y }}"
+           href="{{ url_for('pantry', q=search.q or none, tag=tag_arg, fluid=1 if search.fluid else none, excluded=1 if search.excluded else none, year=y) }}">{{ y }}</a>
+        {% endfor %}
+    {% endcall %}
+    {% endif %}
+    {% if filter_tags %}
+    {% call picker('Tag', search.tag, 'tag', find='find a tag…') %}
+        <a class="chip {{ 'is-on' if not search.tag }}"
+           href="{{ url_for('pantry', q=search.q or none, year=year_arg, fluid=1 if search.fluid else none, excluded=1 if search.excluded else none) }}">Any</a>
+        {% for t in filter_tags %}
+        <a class="chip {{ 'is-on' if search.tag == t.name }}" data-opt="{{ t.name }}"
+           href="{{ url_for('pantry', q=search.q or none, year=year_arg, fluid=1 if search.fluid else none, excluded=1 if search.excluded else none, tag=t.name) }}">{{ t.name }}</a>
+        {% endfor %}
+    {% endcall %}
+    {% endif %}
+</div>
+{% endif %}
+
+{% if search.active %}
+<div class="filterbar">
+    <span class="filterbar__label">Filtered — {{ search.label }}</span>
+    <a class="btn btn--small" href="{{ search.clear_url }}">Clear</a>
+</div>
+{% endif %}
+
+<div class="js-pantry-list">
+{% if not groups %}
+    <div class="empty-state">
+        {% if search.active %}
+        <p class="empty">No items match.</p>
+        <a class="btn btn--primary" href="{{ search.clear_url }}">Clear search</a>
+        {% else %}
+        <p class="empty">The shelves are bare.</p>
+        <a class="btn btn--primary" href="{{ url_for('new_item') }}">Add your first item</a>
+        {% endif %}
+    </div>
+{% else %}
+    {% for group in groups %}
+    <details class="shelf" open data-shelf-id="{{ group.id or 0 }}">
+        <summary class="shelf__head">
+            <span class="shelf__title-wrap">
+                <span class="shelf__chevron" aria-hidden="true"></span>
+                <h2 class="shelf__name">{{ group.name }}</h2>
+            </span>
+            <span class="shelf__count">{{ group.total }} item{{ '' if group.total == 1 else 's' }}</span>
+        </summary>
+
+        <div class="shelf__tools">
+            <label class="selectall">
+                <input type="checkbox" class="js-select-all">
+                <span>Select all on this page</span>
+            </label>
+        </div>
+
+        <div class="rows__head">
+            <label class="rows__head-sel">
+                <input type="checkbox" class="js-select-all" aria-label="Select all on this page">
+            </label>
+            <button type="button" class="colhead colhead--name" data-sort="name">Name</button>
+            <div class="rows__head-stats">
+                <button type="button" class="colhead colhead--units" data-sort="units">Units</button>
+                <button type="button" class="colhead colhead--total" data-sort="total">Total</button>
+            </div>
+            <button type="button" class="colhead colhead--days" data-sort="days">Expiry</button>
+            <span class="rows__head-actions" aria-hidden="true"></span>
+        </div>
+
+        <ul class="rows">
+            {% for item in group['items'] %}
+            {% set status = 'expired' if item.expired else ('soon' if item.expiring_soon else 'fresh') %}
+            <li class="row row--{{ status }}{{ ' row--excluded' if item.exclude_stats }}"
+                data-name="{{ item.name|lower }}"
+                data-search="{{ (item.name ~ ' ' ~ (item.tags | join(' '))) | fold }}"
+                data-units="{{ item.units }}"
+                data-total="{{ item.weight_value * item.units }}"
+                data-days="{{ item.days_left if item.days_left is not none else 999999 }}">
+                <label class="row__sel">
+                    <input type="checkbox" class="js-item" name="item_ids"
+                           value="{{ item.id }}" form="move-form"
+                           aria-label="Select {{ item.name }}">
+                </label>
+
+                {% set rnut = item.nutrition | fromjson %}
+                <div class="row__name">
+                    {% if item.photo_path %}
+                    <div class="thumb-wrap js-thumb">
+                        <img class="row__thumb" src="{{ url_for('media', filename=item.photo_path) }}" alt="">
+                        <div class="thumb-pop" hidden>
+                            <img class="thumb-pop__img" src="{{ url_for('media', filename=item.photo_path) }}" alt="">
+                            <div class="thumb-pop__name">{{ item.name }}</div>
+                            {% if rnut and rnut.brands %}
+                            <div class="thumb-pop__brand">{{ rnut.brands }}</div>
+                            {% endif %}
+                            {% if rnut and rnut.nutriscore %}
+                            <span class="nutriscore nutriscore--{{ rnut.nutriscore }}">Nutri-Score {{ rnut.nutriscore|upper }}</span>
+                            {% endif %}
+                            {% set p = rnut.per_100g if rnut else None %}
+                            {% if p %}
+                            <dl class="popfacts">
+                                {% for label, key, unit in [
+                                    ('Energy', 'energy_kcal', 'kcal'), ('Fat', 'fat', 'g'),
+                                    ('Saturated', 'saturated_fat', 'g'), ('Carbs', 'carbohydrates', 'g'),
+                                    ('Sugars', 'sugars', 'g'), ('Fibre', 'fiber', 'g'),
+                                    ('Protein', 'proteins', 'g'), ('Salt', 'salt', 'g')] %}
+                                {% if p.get(key) is not none %}
+                                <div class="popfacts__row"><dt>{{ label }}</dt><dd>{{ p[key] }} {{ unit }}</dd></div>
+                                {% endif %}
+                                {% endfor %}
+                            </dl>
+                            <p class="popfacts__basis">per 100 g · Open Food Facts</p>
+                            {% else %}
+                            <p class="popfacts__basis">No nutrition info yet.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    <span class="row__name-text">
+                        <span class="row__title">{{ item.name }}
+                            {% if rnut and rnut.nutriscore %}
+                            <span class="nutriscore nutriscore--mini nutriscore--{{ rnut.nutriscore }}">{{ rnut.nutriscore|upper }}</span>
+                            {% endif %}
+                        </span>
+                        {% if item.tags %}
+                        <span class="row__tags">
+                            {% for t in item.tags %}
+                            <a class="tag-pill" href="{{ url_for('pantry', tag=t) }}" title="Filter by “{{ t }}”">{{ t }}</a>
+                            {% endfor %}
+                        </span>
+                        {% endif %}
+                    </span>
+                </div>
+
+                <div class="row__stats">
+                    <div class="stat stat--units">
+                        <span class="stat__num">{{ item.units }}</span>
+                        <span class="stat__lbl">units</span>
+                    </div>
+                    <div class="stat stat--total">
+                        <span class="stat__num">{{ item.total_weight }}</span>
+                        <span class="stat__lbl">total</span>
+                    </div>
+                </div>
+
+                {% if item.days_left is not none %}
+                    {% if status == 'expired' %}
+                        <span class="row__fresh pill pill--expired">{{ -item.days_left }}d</span>
+                    {% elif status == 'soon' %}
+                        <span class="row__fresh pill pill--soon">{{ item.days_left }}d</span>
+                    {% else %}
+                        <span class="row__fresh pill pill--fresh">{{ item.days_left }}d</span>
+                    {% endif %}
+                {% endif %}
+
+                <div class="row__actions">
+                    <a class="btn btn--small btn--icon" href="{{ url_for('edit_item', item_id=item.id) }}"
+                       aria-label="Edit {{ item.name }}" title="Edit">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 20h9"></path>
+                            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
+                        </svg>
+                    </a>
+                    <form method="post" action="{{ url_for('delete_item', item_id=item.id) }}"
+                          class="js-confirm" data-confirm="Remove {{ item.name }} from the pantry?">
+                        <button class="btn btn--small btn--danger btn--icon" type="submit"
+                                aria-label="Delete {{ item.name }}" title="Delete">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                <line x1="10" y1="11" x2="10" y2="17"></line>
+                                <line x1="14" y1="11" x2="14" y2="17"></line>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+
+        {% if group.pages > 1 %}
+        <nav class="pager" aria-label="{{ group.name }} pages">
+            {% if group.has_prev %}
+                <a class="btn btn--small" href="{{ group.prev_url }}">Prev</a>
+            {% else %}
+                <span class="btn btn--small pager__off">Prev</span>
+            {% endif %}
+            <span class="pager__at">Page {{ group.page }} of {{ group.pages }}</span>
+            {% if group.has_next %}
+                <a class="btn btn--small" href="{{ group.next_url }}">Next</a>
+            {% else %}
+                <span class="btn btn--small pager__off">Next</span>
+            {% endif %}
+        </nav>
+        {% endif %}
+    </details>
+    {% endfor %}
+
+    <p class="empty search__none" hidden>No items match your search.</p>
+{% endif %}
+</div>
+
+{% if groups %}
+    {# pick an action first, then the bar shows only that action's context + one confirm
+       button. Lives outside .js-pantry-list so a soft refresh doesn't wipe its state. #}
+    <form id="move-form" class="movebar" method="post" hidden
+          action="{{ url_for('move_items') }}"
+          data-move-url="{{ url_for('move_items') }}"
+          data-tag-url="{{ url_for('tag_items') }}"
+          data-delete-url="{{ url_for('delete_items') }}">
+        <span class="movebar__count"><span class="js-move-count">0</span> selected</span>
+
+        <div class="movebar__actions" role="group" aria-label="Bulk action">
+            <button type="button" class="movebar__act is-on" data-action="move">Move</button>
+            <button type="button" class="movebar__act" data-action="tag">Tag</button>
+            <button type="button" class="movebar__act movebar__act--danger" data-action="delete">Delete</button>
+        </div>
+
+        <label class="movebar__to js-ctx-move">
+            <span>to shelf</span>
+            <select name="shelf_id" aria-label="Target shelf">
+                <option value="0">Unshelved</option>
+                {% for shelf in shelves %}
+                <option value="{{ shelf.id }}">{{ shelf.name }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label class="movebar__to js-ctx-tag" hidden>
+            <span>tags</span>
+            <input type="text" name="tags" autocomplete="off"
+                   placeholder="rice, grain" aria-label="Tags to apply to the selection">
+        </label>
+        <span class="movebar__warn js-ctx-delete" hidden>Removes them from the pantry — can't be undone.</span>
+        {% if filter_tags %}
+        {# existing tags as toggle pills — tapping writes into the field above; works
+           on mobile, where a datalist would offer nothing. Carries js-ctx-tag so it
+           shows/hides with the Tag action like the field itself. #}
+        <div class="movebar__suggest tag-suggest js-ctx-tag js-movebar-suggest" hidden>
+            {% for t in filter_tags %}
+            <button type="button" class="tag-pill" data-tag="{{ t.name }}">{{ t.name }}</button>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <button class="btn btn--primary movebar__go js-movebar-go" type="submit"
+                formaction="{{ url_for('move_items') }}">Move</button>
+    </form>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ asset('js/pages/pantry.js') }}"></script>
+<script src="{{ asset('js/pages/filter_picker.js') }}"></script>
+{% endblock %}

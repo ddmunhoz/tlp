@@ -1,0 +1,41 @@
+/* Sign-in — one quiet card, centred. */
+.login-body {
+    display: flex;
+    min-height: 100vh;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+}
+.login { width: 100%; max-width: 22rem; }
+.login__brand {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.7rem;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    text-align: center;
+    margin: 0 0 1.5rem;
+}
+.login__form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+}
+.login__form input[type="password"] {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.6rem 0.8rem;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 1rem;
+}
+.login__form input[type="password"]:focus { outline: none; border-color: var(--brass); }
+.login__form .btn { width: 100%; justify-content: center; }
+.login__form .flash { margin: 0; }

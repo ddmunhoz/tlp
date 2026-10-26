@@ -1,0 +1,103 @@
+/* Activity — a dated feed of what changed in the pantry (0014).
+   Phone: time + pill + name on one line, the detail under it. Desktop: one row. */
+
+.act-filter { margin-bottom: 1.5rem; }
+.act-filter .chip { text-decoration: none; }
+
+.act-day { margin-bottom: 1.5rem; }
+.act-day__head {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    margin: 0;
+    padding: 0.5rem 0.25rem;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--brass);
+}
+
+.act-rows { list-style: none; margin: 0; padding: 0; }
+.act-row {
+    display: grid;
+    grid-template-columns: auto auto minmax(0, 1fr);
+    grid-template-areas:
+        "time   pill   name"
+        "detail detail detail";
+    column-gap: 0.7rem;
+    row-gap: 0.25rem;
+    align-items: center;
+    padding: 0.7rem 0.25rem;
+    border-bottom: 1px solid var(--line);
+}
+.act-row__time {
+    grid-area: time;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+}
+
+/* the action pill — same colour language as everywhere else: mint = in,
+   rust = out, amber = changed, quiet grey for the housekeeping ones */
+.act-pill {
+    grid-area: pill;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 0.18rem 0.55rem;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--bg-2);
+    color: var(--muted);
+    white-space: nowrap;
+}
+.act-pill--added {
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+    color: #74e9b3;
+}
+.act-pill--removed {
+    background: color-mix(in srgb, var(--rust) 20%, transparent);
+    border-color: color-mix(in srgb, var(--rust) 45%, transparent);
+    color: #f0897a;
+}
+.act-pill--units,
+.act-pill--edited {
+    background: color-mix(in srgb, var(--amber) 18%, transparent);
+    border-color: color-mix(in srgb, var(--amber) 45%, transparent);
+    color: #e6be6f;
+}
+
+.act-row__name {
+    grid-area: name;
+    min-width: 0;
+    font-weight: 600;
+    color: var(--ink);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+}
+a.act-row__name:hover { color: var(--accent); }
+.act-row__name--gone { color: var(--ink-dim); }
+.act-row__detail {
+    grid-area: detail;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--ink-dim);
+    overflow-wrap: anywhere;
+}
+
+.act-pager { display: flex; justify-content: center; padding: 1rem 0; }
+
+@media (min-width: 720px) {
+    .act-row {
+        grid-template-columns: 3.25rem 5.5rem minmax(0, 1fr) minmax(0, 1.4fr);
+        grid-template-areas: "time pill name detail";
+        column-gap: 1rem;
+    }
+}

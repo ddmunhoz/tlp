@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Tags — The Last Pantry{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ asset('css/pages/tags.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="page-head">
+    <h1>Tags</h1>
+</section>
+
+<p class="tags-lead muted">Tags group interchangeable products — tag every rice
+    <span class="tag-chip tag-chip--static">rice</span> and a meal can call for the tag
+    instead of one product, pooling all of them. Add tags on an item; rename or remove them here.</p>
+
+{% if not tags %}
+    <p class="empty">No tags yet. Open any pantry item and add one in its Tags field.</p>
+{% else %}
+    <ul class="tag-manage">
+        {% for tag in tags %}
+        <li class="tag-manage__row">
+            <form class="tag-rename" method="post" action="{{ url_for('rename_tag', tag_id=tag.id) }}">
+                <input type="text" name="name" value="{{ tag.name }}" aria-label="Tag name" required>
+                <span class="tag-manage__count" title="products with this tag">{{ tag.usage }}
+                    product{{ '' if tag.usage == 1 else 's' }}</span>
+                <button class="btn btn--small" type="submit">Rename</button>
+            </form>
+            <form method="post" action="{{ url_for('delete_tag', tag_id=tag.id) }}"
+                  class="js-confirm" data-confirm="Delete “{{ tag.name }}”? It's removed from every product that has it.">
+                <button class="btn btn--small btn--danger" type="submit">Delete</button>
+            </form>
+        </li>
+        {% endfor %}
+    </ul>
+    <p class="tags-note muted">Renaming to a tag that already exists merges the two.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,566 @@
+/* Pantry — an inventory read at a glance.
+   Priority order on every row: how much (units + total weight) > name > expiry.
+   Each shelf is its own labelled, collapsible panel; a freshness rail runs down each row. */
+
+/* ---- shelf panel (a <details>) ---- */
+.shelf {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+.shelf__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.85rem 1.1rem;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+    list-style: none;               /* kill the default disclosure triangle */
+}
+.shelf__head::-webkit-details-marker { display: none; }
+.shelf__title-wrap { display: flex; align-items: center; gap: 0.6rem; min-width: 0; }
+.shelf__chevron {
+    flex: none;
+    width: 0; height: 0;
+    border-left: 5px solid currentColor;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    color: var(--muted);
+    transition: transform 0.15s ease;
+}
+.shelf[open] > .shelf__head .shelf__chevron { transform: rotate(90deg); }
+.shelf__name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.2rem;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin: 0;
+}
+.shelf__count {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+/* ---- per-shelf tools (select all) ---- */
+.shelf__tools {
+    padding: 0.5rem 1.1rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+}
+.selectall {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    cursor: pointer;
+}
+.js-item, .js-select-all {
+    accent-color: var(--accent);
+    width: 1.05rem;
+    height: 1.05rem;
+    cursor: pointer;
+}
+
+/* ---- sortable column headers (desktop only — see media query below) ---- */
+.rows__head { display: none; }
+.colhead {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    text-align: left;
+    white-space: nowrap;
+}
+.colhead:hover { color: var(--ink); }
+.colhead[data-dir] { color: var(--ink); }
+.colhead[data-dir="asc"]::after  { content: " ▲"; font-size: 0.55rem; }
+.colhead[data-dir="desc"]::after { content: " ▼"; font-size: 0.55rem; }
+
+/* ---- rows ---- */
+.rows { list-style: none; margin: 0; padding: 0; }
+
+/* mobile: a compact card. name + freshness up top, labelled stats below,
+   actions on their own line. the checkbox tucks up beside the photo. */
+.row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas:
+        "sel name    fresh"
+        "sel stats   stats"
+        "sel actions actions";
+    column-gap: 0.8rem;
+    row-gap: 0.6rem;
+    align-items: start;
+    padding: 0.9rem 1rem;
+    border-left: 4px solid var(--line);
+}
+.row + .row { border-top: 1px solid var(--line); }
+.row--fresh   { border-left-color: var(--fresh); }
+.row--soon    { border-left-color: var(--amber); }
+.row--expired { border-left-color: var(--rust); opacity: 0.9; }
+/* left out of the stats — amber tint + a diagonal "////" hatch so it reads as
+   "set aside" at a glance. only the background changes, so the expiry glyph on
+   the left border still shows through. */
+.row--excluded {
+    background-color: color-mix(in srgb, var(--amber) 14%, transparent);
+    background-image: repeating-linear-gradient(
+        135deg,
+        transparent 0,
+        transparent 4px,
+        color-mix(in srgb, var(--amber) 24%, transparent) 4px,
+        color-mix(in srgb, var(--amber) 24%, transparent) 5px
+    );
+}
+/* give the action icons + expiry pill a solid backing so the hatch doesn't
+   bleed through and muddy them */
+.row--excluded .row__actions .btn {
+    background: var(--surface);
+    border-color: var(--line);
+}
+/* re-mix the freshness pill against surface (opaque) instead of transparent, so it
+   keeps its colour but the hatch can't show through it */
+.row--excluded .pill--fresh   { background: color-mix(in srgb, var(--fresh) 16%, var(--surface)); }
+.row--excluded .pill--soon    { background: color-mix(in srgb, var(--amber) 18%, var(--surface)); }
+.row--excluded .pill--expired { background: color-mix(in srgb, var(--rust) 20%, var(--surface)); }
+
+.row__sel { grid-area: sel; align-self: start; display: flex; padding-top: 0.15rem; }
+
+/* name — readable, not shouting */
+.row__name { grid-area: name; min-width: 0; display: flex; align-items: center; gap: 0.6rem; }
+.row__thumb {
+    flex: 0 0 auto;
+    width: 38px;
+    height: 38px;
+    object-fit: contain;
+    border-radius: var(--radius);
+}
+.thumb-wrap { flex: 0 0 auto; display: block; }
+.row__name-text { min-width: 0; }
+
+/* ---- desktop hover preview: bigger photo + nutrition on the thumbnail ---- */
+.thumb-pop {
+    position: fixed;
+    left: -9999px;              /* parked off-screen until JS places it */
+    top: 0;
+    z-index: 60;
+    width: 250px;
+    padding: 0.9rem;
+    background: var(--surface-hi);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: 0 16px 44px rgba(0, 0, 0, 0.55);
+    pointer-events: none;       /* the popover never steals the hover */
+}
+.thumb-pop[hidden] { display: none; }
+.thumb-pop__img {
+    width: 100%;
+    height: 150px;
+    object-fit: contain;
+    border-radius: var(--radius);
+    margin-bottom: 0.6rem;
+}
+.thumb-pop__name { font-weight: 600; color: var(--ink); line-height: 1.25; }
+.thumb-pop__brand {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-top: 0.15rem;
+}
+.thumb-pop .nutriscore { margin-top: 0.55rem; display: inline-block; }
+.popfacts { display: grid; gap: 0.2rem; margin: 0.7rem 0 0; }
+.popfacts__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+}
+.popfacts__row dt { color: var(--muted); }
+.popfacts__row dd { color: var(--ink); margin: 0; font-variant-numeric: tabular-nums; }
+.popfacts__basis {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin: 0.7rem 0 0;
+}
+/* never show the hover preview on touch devices */
+@media (hover: none) { .thumb-pop { display: none !important; } }
+.row__title {
+    display: block;
+    font-weight: 600;
+    font-size: 1.02rem;
+    color: var(--ink);
+    line-height: 1.2;
+}
+
+/* stats — units + total, each a number over a small label. on mobile they sit
+   close together and labelled; on desktop they drop into fixed table columns. */
+.row__stats { grid-area: stats; display: flex; gap: 2rem; align-items: flex-start; }
+.stat { display: flex; flex-direction: column; gap: 0.15rem; }
+.stat__num {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: 1.2rem;
+    line-height: 1;
+    color: var(--ink);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+.stat__lbl {
+    font-family: var(--font-mono);
+    font-size: 0.56rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+}
+
+/* freshness pill — top-right by the name on mobile, in its own column on desktop */
+.row__fresh { grid-area: fresh; justify-self: end; align-self: start; }
+/* freshness pill styles now live in app.css so the adjust screens share them */
+
+/* actions — quiet, pinned right on the stats line */
+.row__actions { grid-area: actions; display: flex; gap: 0.5rem; justify-self: end; }
+.row__actions form { margin: 0; }
+
+/* ---- pager (per shelf) ---- */
+.pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.1rem;
+    background: var(--bg-2);
+    border-top: 1px solid var(--line);
+}
+.pager__at {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+}
+.pager__off { opacity: 0.35; pointer-events: none; }
+
+/* ---- bulk move bar — floats at the bottom once rows are picked ---- */
+.movebar {
+    position: sticky;
+    bottom: 1rem;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding: 0.75rem 1rem;
+    background: var(--surface-hi);
+    border: 1px solid var(--brass);
+    border-radius: var(--radius);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+}
+.movebar[hidden] { display: none; }
+.movebar__count {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink);
+}
+.movebar__to {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+}
+/* the `hidden` attr must win over the display above, or the inactive action's field
+   stays on screen (a display rule overrides the UA [hidden] { display:none }) */
+.movebar__to[hidden],
+.movebar__warn[hidden] { display: none; }
+.movebar__to select,
+.movebar__to input {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    padding: 0.4rem 0.5rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--bg-2);
+    color: var(--ink);
+}
+.movebar__to input { width: 9rem; text-transform: none; letter-spacing: normal; }
+.movebar__to input::placeholder { color: var(--muted); }
+.movebar__to input:focus { outline: none; border-color: var(--brass); }
+
+/* the Tag action's suggestion pills — a full-width row under the bar's controls.
+   Same [hidden]-must-win note as .movebar__to above. */
+.movebar__suggest { flex-basis: 100%; }
+.movebar__suggest[hidden] { display: none; }
+
+/* action picker: Move / Tag / Delete — small segmented pills */
+.movebar__actions { display: inline-flex; gap: 0.35rem; }
+.movebar__act {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    padding: 0.35rem 0.75rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--bg-2);
+    color: var(--ink-dim);
+    cursor: pointer;
+    transition: background .12s ease, border-color .12s ease, color .12s ease;
+}
+.movebar__act:hover { border-color: var(--brass); color: var(--ink); }
+.movebar__act.is-on {
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+    color: #74e9b3;
+    font-weight: 500;
+}
+/* the destructive action reads red once armed */
+.movebar__act--danger.is-on {
+    background: color-mix(in srgb, var(--rust) 16%, transparent);
+    border-color: color-mix(in srgb, var(--rust) 45%, transparent);
+    color: #f0897a;
+}
+.movebar__warn {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: #f0897a;
+}
+/* keep the confirm button on the right whether it's the primary or danger variant */
+.movebar__go { margin-left: auto; }
+
+/* ---- search + macro chips ---- */
+.search { margin-bottom: 1.25rem; }
+.search__form { display: flex; gap: 0.5rem; }
+.search__input {
+    flex: 1;
+    min-width: 0;
+    padding: 0.6rem 0.8rem;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+}
+.search__input::placeholder { color: var(--muted); }
+.search__input:focus { outline: none; border-color: var(--brass); }
+.search__macros {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    margin-top: 0.6rem;
+}
+.search__lbl {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-right: 0.15rem;
+}
+.search__macros .chip { text-decoration: none; }
+
+/* ---- filter banner (arrived here from a statistics chart) ---- */
+.filterbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: 0.6rem 1rem;
+    margin-bottom: 1.25rem;
+    background: var(--surface-hi);
+    border: 1px solid var(--brass);
+    border-radius: var(--radius);
+}
+.filterbar__label {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink);
+}
+
+/* ---- empty state ---- */
+.empty-state { padding: 1rem 0; }
+.empty-state .empty { border: none; padding: 1.5rem 0; margin: 0 0 1rem; }
+
+/* ---- desktop: one clean line, numbers pinned mid-row ---- */
+@media (min-width: 720px) {
+    /* header + every row share ONE fixed column recipe so nothing can drift.
+       (they're separate grids, so auto/fr tracks would size independently.)
+       only the name column flexes; everything else is a fixed track. */
+    .rows__head, .row {
+        grid-template-columns: 1.5rem minmax(0, 1fr) 4.75rem 5.5rem 6rem 10rem;
+        grid-template-areas: "sel name units total expiry actions";
+        align-items: center;
+        gap: 1.75rem;
+    }
+
+    /* the two stats stop being a nested flex and drop straight into their tracks */
+    .row__stats { display: contents; }
+    .stat--units  { grid-area: units; }
+    .stat--total  { grid-area: total; }
+    .stat__lbl    { display: none; }   /* the column headers do the labelling here */
+    .row__fresh   { grid-area: expiry; justify-self: end; align-self: center; }
+
+    .rows__head {
+        display: grid;
+        padding: 0.5rem 1.1rem;
+        background: var(--surface);
+        border-bottom: 1px solid var(--line);
+    }
+    .rows__head-stats   { display: contents; }
+    .rows__head-sel     { grid-area: sel; display: flex; align-items: center; }
+    /* select-all lives in the header on desktop, so the floating bar is redundant */
+    .shelf__tools       { display: none; }
+    .colhead--name      { grid-area: name; }
+    .colhead--units     { grid-area: units; }
+    .colhead--total     { grid-area: total; }
+    .colhead--days      { grid-area: expiry; justify-self: end; }
+    .rows__head-actions { grid-area: actions; }
+}
+
+/* product tags under the item name — clickable pills that filter the pantry */
+.row__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-top: 0.3rem;
+}
+
+/* ---- filter pickers (0012, Expiry + Tag): one summary pill, the chips in a panel ----
+   Plain state (no JS): the panel is just a block under the pill, so the old row of
+   chips still shows. filter_picker.js adds .is-ready and from then on the panel floats
+   and only shows with .is-open. State lives on the panel itself, so it keeps working
+   even if someone later reparents it. The find box is optional per row. */
+.fpick__btn { display: inline-flex; align-items: center; gap: 0.45rem; }
+.fpick__caret { font-size: 0.7em; opacity: 0.7; }
+.fpick__panel {
+    flex-basis: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-top: 0.4rem;
+}
+.fpick__find {
+    width: 100%;
+    padding: 0.5rem 0.7rem;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+}
+.fpick__find::placeholder { color: var(--muted); }
+.fpick__find:focus { outline: none; border-color: var(--brass); }
+.fpick__chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+/* [hidden] must beat the flex/inline display above — bitten by this before */
+.fpick__chips .chip[hidden] { display: none; }
+.fpick__none {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin: 0;
+}
+.fpick__none[hidden] { display: none; }
+
+/* JS is up: float the panel off the pill, hidden until opened */
+.fpick__panel.is-ready {
+    display: none;
+    position: fixed;
+    z-index: 60;                        /* over the sticky move bar (20) */
+    width: min(34rem, calc(100vw - 2rem));
+    margin: 0;
+    padding: 0.75rem;
+    background: var(--surface-hi);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
+}
+.fpick__panel.is-ready.is-open { display: flex; }
+.fpick__panel.is-ready .fpick__chips {
+    overflow-y: auto;
+    max-height: 40vh;
+    padding: 0.1rem 0.25rem 0.1rem 0.1rem;  /* room for the focus ring + scrollbar */
+}
+.fpick__backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 59;
+    background: rgba(0, 0, 0, 0.35);
+}
+.fpick__backdrop[hidden] { display: none; }
+
+/* phone: a bottom sheet instead of a popover — full width, pinned to the bottom,
+   with a grab handle so it reads as a sheet. filter_picker.js clears any inline
+   left/top it set for the desktop layout. */
+@media (max-width: 719px) {
+    .fpick__panel.is-ready {
+        left: 0;
+        right: 0;
+        bottom: 0;
+        top: auto;
+        width: auto;
+        max-height: 70vh;
+        border-radius: var(--radius) var(--radius) 0 0;
+        padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+    }
+    .fpick__panel.is-ready::before {
+        content: "";
+        width: 2.5rem;
+        height: 4px;
+        margin: 0 auto;
+        border-radius: 999px;
+        background: var(--line);
+    }
+    .fpick__panel.is-ready .fpick__chips { max-height: 45vh; }
+
+    /* a sheet you TYPE into (the tag one) goes at the top instead. Bottom-anchored,
+       the sheet shrank as the chips filtered and the find box sank 350px down the
+       screen, straight under the keyboard. Up top the box stays put under your thumb,
+       the chips get a fixed height and scroll beneath it, and the keyboard only ever
+       covers the tail of the list. */
+    .fpick__panel.is-ready:has(.fpick__find) {
+        top: 0;
+        bottom: auto;
+        max-height: none;
+        border-radius: 0 0 var(--radius) var(--radius);
+        padding-top: calc(0.75rem + env(safe-area-inset-top));
+        padding-bottom: 0.75rem;
+    }
+    .fpick__panel.is-ready:has(.fpick__find)::before { display: none; }   /* no grab handle on a top sheet */
+    .fpick__panel.is-ready:has(.fpick__find) .fpick__chips {
+        height: 38vh;
+        max-height: none;
+        align-content: flex-start;
+    }
+}

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Which one? — The Last Pantry{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ asset('css/pages/adjust.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="page-head">
+    <h1>Pick an entry</h1>
+</section>
+<p class="pick__hint">This barcode is on {{ items|length }} entries — which one?</p>
+
+<ul class="pick">
+    {% for it in items %}
+    {% set status = 'expired' if it.expired else ('soon' if it.expiring_soon else 'fresh') %}
+    <li class="pick__row pick__row--{{ status }}">
+        <a class="pick__link" href="{{ url_for('adjust_item', item_id=it.id) }}">
+            <span class="pick__name">{{ it.name }}</span>
+            <span class="pick__meta">
+                {{ it.units }} unit{{ '' if it.units == 1 else 's' }} · {{ it.total_weight }}
+                {% if it.expire_date %}· exp {{ it.expire_date }}{% endif %}
+                {% if it.shelf %}· {{ it.shelf }}{% endif %}
+            </span>
+        </a>
+        {% if it.days_left is not none %}
+        <span class="pill pill--{{ status }}">
+            {% if status == 'expired' %}{{ -it.days_left }}d{% else %}{{ it.days_left }}d{% endif %}
+        </span>
+        {% endif %}
+    </li>
+    {% endfor %}
+</ul>
+
+<a class="btn" href="{{ url_for('new_item', barcode=barcode) }}">None of these — add new</a>
+{% endblock %}

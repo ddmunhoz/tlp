@@ -1,0 +1,43 @@
+/* Tag management — tags are created on the item form, so this page renames/removes. */
+
+.tags-lead { max-width: 560px; margin: 0 0 1.5rem; line-height: 1.5; }
+.tags-lead .tag-chip { vertical-align: middle; }
+.tags-note { margin-top: 1rem; font-size: 0.85rem; }
+
+.tag-manage { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
+.tag-manage__row {
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 0.7rem 0.9rem;
+    flex-wrap: wrap;
+}
+.tag-rename { display: flex; gap: 0.6rem; align-items: center; flex: 1; margin: 0; }
+.tag-rename input {
+    flex: 1;
+    min-width: 8rem;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--ink);
+}
+.tag-rename input:hover { border-color: var(--line); }
+.tag-rename input:focus {
+    outline: none;
+    background: var(--bg-2);
+    border-color: var(--brass);
+}
+.tag-manage__count {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    color: var(--muted);
+    white-space: nowrap;
+}
+.tag-manage__row > form:last-child { margin: 0; }

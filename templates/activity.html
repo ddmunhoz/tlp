@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Activity — The Last Pantry{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ asset('css/pages/activity.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="page-head">
+    <h1>Activity</h1>
+    <p class="lede">what changed in the pantry · last {{ keep_days }} days</p>
+</section>
+
+{# plain links, like the pantry's Type row — works without JS #}
+<div class="chips act-filter">
+    <a class="chip {{ 'is-on' if not action }}" href="{{ url_for('activity_page') }}">All</a>
+    {% for a in actions %}
+    <a class="chip {{ 'is-on' if action == a }}" href="{{ url_for('activity_page', action=a) }}">{{ a|capitalize }}</a>
+    {% endfor %}
+</div>
+
+{% if not days %}
+    <p class="empty">
+        {% if action %}Nothing {{ action }} in the last {{ keep_days }} days.
+        {% else %}Nothing yet — changes to the pantry show up here as they happen.{% endif %}
+    </p>
+{% else %}
+    {% for day in days %}
+    <section class="act-day">
+        <h2 class="act-day__head">{{ day.label }}</h2>
+        <ul class="act-rows">
+            {% for r in day.rows %}
+            <li class="act-row act-row--{{ r.action }}">
+                <time class="act-row__time" datetime="{{ r.at }}">{{ r.time }}</time>
+                <span class="act-pill act-pill--{{ r.action }}">{{ r.action }}</span>
+                {% if r.item_id in live_ids %}
+                <a class="act-row__name" href="{{ url_for('edit_item', item_id=r.item_id) }}">{{ r.item_name }}</a>
+                {% else %}
+                <span class="act-row__name act-row__name--gone" title="no longer in the pantry">{{ r.item_name }}</span>
+                {% endif %}
+                <span class="act-row__detail">{{ r.text }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
+    {% endfor %}
+    {% if more %}
+    <nav class="act-pager" aria-label="Older activity">
+        <a class="btn btn--small" href="{{ url_for('activity_page', action=action or none, before=last_id) }}">Older</a>
+    </nav>
+    {% endif %}
+{% endif %}
+{% endblock %}

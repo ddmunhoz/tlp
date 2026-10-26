@@ -1,0 +1,107 @@
+/* Settings — flat cards laid out two-up on desktop, single column on mobile. */
+.settings { display: flex; flex-direction: column; gap: 1.25rem; max-width: 56rem; }
+.settings-grid-2 { display: grid; gap: 1.25rem; }
+
+@media (min-width: 720px) {
+    /* stretch so the two cards in a row match heights */
+    .settings-grid-2 { grid-template-columns: 1fr 1fr; align-items: stretch; }
+    .settings-grid-2 > .settings-save { grid-column: 1 / -1; align-self: start; }
+    /* a form that holds a card should let the card fill the stretched column */
+    .settings-grid-2 > form { display: flex; }
+    .settings-grid-2 > form > .scard { flex: 1; }
+}
+
+.scard {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.4rem;
+}
+.scard__title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.2rem;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin: 0 0 1.1rem;
+}
+.scard__sub {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--brass);
+    margin: 1.4rem 0 0.6rem;
+}
+.scard .muted { font-size: 0.85rem; margin: 0 0 1.1rem; max-width: 46ch; }
+
+/* stack the plain fields with even spacing */
+.scard .field + .field { margin-top: 0.9rem; }
+
+/* household table: row label + People / kcal / Water columns */
+.hh-table {
+    display: grid;
+    grid-template-columns: auto 1fr 1fr 1fr;
+    gap: 0.5rem 0.55rem;
+    align-items: center;
+}
+.hh-head, .hh-row { display: contents; }   /* children flow into the shared grid */
+.hh-head span {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-align: center;
+}
+.hh-head span:first-child { min-width: 3.5rem; }
+.hh-label { color: var(--ink); font-size: 0.92rem; }
+.hh-table input {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    padding: 0.5rem 0.4rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--bg-2);
+    color: var(--ink);
+    color-scheme: dark;
+}
+.hh-table input:focus { outline: none; border-color: var(--brass); box-shadow: 0 0 0 1px var(--brass); }
+
+/* daily nutrient targets — a responsive grid of labelled number fields */
+.nt-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+    gap: 0.9rem 0.7rem;
+}
+.nt-grid .field + .field { margin-top: 0; }   /* grid gap handles spacing */
+
+/* the exclude-expired checkbox sits inline */
+/* base .field--check lives in app.css; just the in-card spacing here */
+.scard .field--check { margin-top: 1.2rem; }
+/* the meals-per-day box comes right after the people table, give it some air */
+.scard .hh-table + .field { margin-top: 1.2rem; }
+
+.settings-warn { color: var(--amber); }
+.settings-warn code { font-family: var(--font-mono); color: var(--ink); }
+
+/* a row of buttons (change password / sign out, export / backup) */
+.settings-actions { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin-top: 1.1rem; }
+.settings-actions form { margin: 0; }
+
+.settings-save { margin: 0; }
+
+/* recent-backups list */
+.backup-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.3rem; }
+.backup-list li {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--ink-dim);
+    padding-left: 0.9rem;
+    position: relative;
+}
+.backup-list li::before { content: "·"; position: absolute; left: 0; color: var(--brass); }

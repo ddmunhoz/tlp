@@ -1,0 +1,401 @@
+/* The Last Pantry — "the larder".
+   Dark, warm storage-room palette; type set like old preserve labels.
+   Shared tokens + components live here; per-page rules in css/pages/. */
+
+:root {
+    /* cool slate shelving (podVault "minty" base), lifted surfaces for panels */
+    --bg:            #12141a;
+    --bg-2:          #171a20;
+    --surface:       #1c1f27;
+    --surface-hi:    #232733;
+
+    --ink:           #e6e8ee;
+    --ink-dim:       #aeb4c2;
+    --muted:         #8b90a0;
+
+    --line:          #2b2f3a;
+    --accent:        #2fe08a;   /* mint — buttons, focus, active, "fresh" */
+    --accent-ink:    #0b1220;   /* readable ink sitting on the mint */
+    --brass:         var(--accent);  /* kept as an alias so accent flows through */
+
+    /* freshness scale — green = plenty of life, amber = soon, red = past it */
+    --fresh:         #2fe08a;
+    --amber:         #e0a63f;
+    --rust:          #e5695a;
+
+    --radius:        4px;       /* crisp, label-like, barely rounded */
+    --gap:           1rem;
+    --maxw:          860px;
+
+    --font-display: "Bricolage Grotesque", var(--font-body);
+    --font-body:    "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+    --font-mono:    "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--ink);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; }
+
+/* ---- masthead : an inventory header, nav set as label tabs ---- */
+.topbar {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--gap);
+    flex-wrap: wrap;
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding: 1.35rem 1.25rem 1rem;
+    border-bottom: 1px solid var(--line);
+}
+.brand {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.55rem;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    text-decoration: none;
+    line-height: 1;
+}
+.topnav { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1.25rem; }
+.topnav a {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    text-decoration: none;
+    padding-bottom: 2px;
+    border-bottom: 1px solid transparent;
+    transition: color .15s ease, border-color .15s ease;
+}
+.topnav a:hover { color: var(--ink); border-bottom-color: var(--brass); }
+/* icon links (stats, settings) — inherit the nav colour, no text underline */
+.topnav__icon { display: inline-flex; align-items: center; border-bottom: none; }
+.topnav__icon svg { width: 1.15rem; height: 1.15rem; display: block; }
+.topnav__icon:hover { border-bottom: none; }
+
+/* ---- layout ---- */
+.content { max-width: var(--maxw); margin: 0 auto; padding: 1.75rem 1.25rem 4rem; }
+
+.page-head { margin-bottom: 1.75rem; }
+.page-head h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2rem, 5.5vw, 2.8rem);
+    letter-spacing: -0.03em;
+    line-height: 1.02;
+    margin: 0;
+    color: var(--ink);
+}
+.page-head .lede {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin: 0.6rem 0 0;
+}
+.page-head .lede .warn { color: var(--amber); }
+.page-head .lede .bad { color: var(--rust); }
+
+.muted { color: var(--muted); }
+.empty {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.35rem;
+    letter-spacing: -0.02em;
+    color: var(--ink-dim);
+    padding: 2.5rem 0;
+    border-top: 1px solid var(--line);
+    margin-top: 1rem;
+}
+
+/* section heads reused across pages */
+.eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--brass);
+    margin: 0 0 0.75rem;
+}
+
+/* ---- buttons ---- */
+.btn {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 0.6rem 1rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink-dim);
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    transition: border-color .15s ease, color .15s ease, background .15s ease;
+}
+.btn:hover { color: var(--ink); border-color: var(--brass); }
+.btn--primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+}
+.btn--primary:hover { background: #52e89f; border-color: #52e89f; color: var(--accent-ink); }
+.btn--danger { color: var(--rust); border-color: transparent; }
+.btn--danger:hover { color: #f0806f; border-color: var(--rust); }
+.btn--small { padding: 0.4rem 0.7rem; font-size: 0.68rem; }
+/* icon-only button — square-ish, glyph inherits the button colour */
+.btn--icon { display: inline-flex; align-items: center; justify-content: center; padding: 0.4rem; }
+.btn--icon svg { width: 1.05rem; height: 1.05rem; display: block; }
+
+/* ---- flash messages : a taped-on note ---- */
+.flashes { list-style: none; margin: 0 0 1.5rem; padding: 0; display: grid; gap: 0.5rem; }
+.flash {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: var(--radius);
+    border-left: 2px solid var(--brass);
+    background: var(--surface);
+    color: var(--ink-dim);
+}
+.flash--error { border-left-color: var(--rust); color: #e6b6a6; }
+
+/* ---- Nutri-Score badge (shared: item form + pantry rows) ---- */
+.nutriscore {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    color: #0b1220;
+}
+.nutriscore--a { background: #2fae4e; color: #fff; }
+.nutriscore--b { background: #7dc043; }
+.nutriscore--c { background: #f2c200; }
+.nutriscore--d { background: #ef8200; color: #fff; }
+.nutriscore--e { background: #e5695a; color: #fff; }
+/* a compact square variant for tight spots like list rows */
+.nutriscore--mini {
+    padding: 0.05rem 0.3rem;
+    font-size: 0.6rem;
+    border-radius: var(--radius);
+}
+
+/* ---- forms (shared) ---- */
+.field { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1.1rem; }
+.field__label {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+}
+.field__label em { color: var(--rust); font-style: normal; }
+.field input, .field select {
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    padding: 0.6rem 0.7rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--bg-2);
+    color: var(--ink);
+}
+.field input::placeholder { color: var(--muted); }
+.field input:focus, .field select:focus {
+    outline: none;
+    border-color: var(--brass);
+    box-shadow: 0 0 0 1px var(--brass);
+}
+/* tame the date/number spinners on the dark ground */
+.field input[type="date"] { color-scheme: dark; }
+
+.field-row { display: flex; gap: var(--gap); flex-wrap: wrap; }
+.form-actions { display: flex; gap: 0.75rem; align-items: center; margin-top: 0.5rem; }
+
+/* inline checkbox field (exclude-expired, counts-as-fluid, …) */
+.field--check { flex-direction: row; align-items: center; gap: 0.6rem; cursor: pointer; }
+.field--check input { width: 1.1rem; height: 1.1rem; accent-color: var(--accent); flex: none; }
+.field--check span { color: var(--ink-dim); font-size: 0.92rem; }
+
+/* quick expiry chips — shared by the add form and the restock menu */
+.chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem; }
+.chip {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    padding: 0.5rem 0.85rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--bg-2);
+    color: var(--ink-dim);
+    cursor: pointer;
+    transition: background .12s ease, border-color .12s ease, color .12s ease;
+}
+.chip:hover { border-color: var(--brass); color: var(--ink); }
+/* active filter: the soft mint pill used for tags, for one consistent pill language */
+.chip.is-on {
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+    color: #74e9b3;
+    font-weight: 500;
+}
+
+/* freshness pill — shared by the pantry list and the quick-adjust screens */
+.pill {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.04em;
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+.pill--fresh   { background: color-mix(in srgb, var(--fresh) 16%, transparent); color: #74e9b3; }
+.pill--soon    { background: color-mix(in srgb, var(--amber) 18%, transparent); color: #e6be6f; }
+.pill--expired { background: color-mix(in srgb, var(--rust) 20%, transparent);  color: #f0897a; }
+
+/* --- tags: shared pill (display) + chip (editable) ------------------------- */
+/* a small mint mono pill for showing a tag; a link on the pantry, static elsewhere */
+.tag-pill {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.02em;
+    padding: 0.1rem 0.45rem;
+    border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    color: #74e9b3;
+    text-decoration: none;
+    white-space: nowrap;
+}
+a.tag-pill:hover { border-color: var(--accent); color: var(--accent); }
+/* [hidden] must beat the display above (suggestion pills hide once applied/filtered) */
+.tag-pill[hidden] { display: none; }
+
+/* an editable chip — a mint pill (same shape as .chip) plus a round remove button,
+   so tags read as mint pills consistent with the quick-expiry / filter pills. */
+.tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    padding: 0.4rem 0.5rem 0.4rem 0.85rem;
+    border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    color: #74e9b3;
+}
+.tag-chip--static { padding: 0.3rem 0.85rem; }
+.tag-chip__rm {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.1rem;
+    height: 1.1rem;
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0;
+    border-radius: 999px;
+}
+.tag-chip__rm:hover { background: color-mix(in srgb, var(--rust) 22%, transparent); color: var(--rust); }
+
+/* tappable tag suggestions — every existing tag offered as a real button under a
+   tag input. Replaces <datalist> autocomplete, which mobile Safari never surfaces
+   (and Chrome mutes under autocomplete="off"). Sized for a fingertip. */
+.tag-suggest {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+}
+.tag-suggest__lbl {
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+}
+button.tag-pill {
+    font-size: 0.78rem;
+    padding: 0.3rem 0.8rem;
+    cursor: pointer;
+}
+button.tag-pill:hover { border-color: var(--accent); color: var(--accent); }
+/* a picked pill (the move bar's toggles): solid mint so on/off reads at a glance */
+button.tag-pill.is-on {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #0f1f18;
+}
+
+/* the tag typeahead — a floating list of matching tags under (or above) a tag
+   input while you type. position:fixed + JS-placed like the app's popovers, so
+   neither the sticky move bar nor an overflow can clip it. */
+.tag-ac {
+    position: fixed;
+    z-index: 60;   /* over the move bar (z 20) and everything else */
+    margin: 0;
+    padding: 0.25rem;
+    list-style: none;
+    background: var(--surface-hi);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+    max-height: 14rem;
+    overflow-y: auto;
+}
+.tag-ac__item {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    padding: 0.45rem 0.8rem;
+    border-radius: calc(var(--radius) - 4px);
+    color: var(--ink);
+    cursor: pointer;
+    white-space: nowrap;
+}
+.tag-ac__item:hover,
+.tag-ac__item.is-active {
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    color: #74e9b3;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+}
+
+/* ---- phones: no control under 16px, ever ----
+   Safari on iPhone zooms the whole page the moment a focused input is smaller than
+   16px and leaves you zoomed + shoved sideways — that was the "screen jumps when I
+   tap a field" on every page. Pointer:coarse keeps desktop on the compact mono
+   sizes; !important because the per-page rules (.field input, .tags-input__entry,
+   .hh-table input…) are more specific and this one has to win over all of them. */
+@media (pointer: coarse) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+}

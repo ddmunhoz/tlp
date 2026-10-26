@@ -1,0 +1,14 @@
+# copy to docker-compose.yml and adjust the port / data path to taste.
+# the app keeps everything (db, backups, csv mirror, photos) under /data,
+# so that volume is the only thing worth backing up.
+services:
+  pantry:
+    build: .
+    container_name: the-last-pantry
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./data:/data
